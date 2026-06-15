@@ -94,6 +94,11 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
 .upd-text{font-size:12px;color:#C0A0FF;}
 .upd-text strong{color:#E0D0FF;font-weight:600;}
 .upd-close{background:none;border:none;color:#555577;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
+.row-err td.acc-td{border-left:2px solid #FF4D6A!important;}
+.row-warn td.acc-td{border-left:2px solid #FFB020!important;}
+.err-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:#2A0A0E;color:#FF4D6A;border:1px solid #5A1520;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600;transition:background .15s;}
+.err-badge:hover{background:#3A1018;}
+.err-summary{display:flex;align-items:center;gap:8px;padding:6px 10px;border-top:1px solid #1E1E2C;flex-shrink:0;font-size:11px;color:#55557A;min-height:32px;}
 </style>
 </head>
 <body>
@@ -112,6 +117,7 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
   <div class="table-wrap">
     <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
   </div>
+  <div id="err-summary" class="err-summary" style="display:none"></div>
   <div class="log-panel">
     <div class="log-header">Лог</div>
     <div class="log-body" id="log"><div class="log-empty">Ожидание...</div></div>
@@ -251,7 +257,8 @@ function render() {
   accs.forEach((a,i)=>{
     const u=gu(a.credentials), st=stMap[a.id]||'', cls=i%2?'row-even':'row-odd', bg=i%2?'#111118':'#09090F';
     const stH = st ? `<span class="st-icon">${st}</span>` : `<span class="st-dot"></span>`;
-    b+=`<tr class="${cls}"><td class="acc-td" style="background:${bg}">
+    const rowErrCls = stMap[a.id]==='❌'?'row-err':stMap[a.id]==='⚠️'?'row-warn':'';
+    b+=`<tr class="${cls} ${rowErrCls}"><td class="acc-td" style="background:${bg}">
       <div class="acc-row">${stH}<span class="acc-at">@</span>
         <span class="acc-name" title="${u}">${u}</span>
         <span class="acc-geo">${a.geo}</span>
@@ -302,7 +309,7 @@ async function api(msg) {
   const r=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1200,
       system:'Return ONLY valid JSON. No markdown, no backticks, no extra text.',
       tools:[{type:'web_search_20250305',name:'web_search'}],
       messages:[{role:'user',content:msg}]})
@@ -312,18 +319,32 @@ async function api(msg) {
   return d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
 }
 
-async function fetchIG(user) {
+async function fetchAllIG(users) {
   const date=new Date().toISOString().slice(0,10);
+  const list=users.map(u=>`@${u}`).join(', ');
   try {
     const raw=await api(
-      `Search instagram.com/${user}/reels/ for user @${user}. Today is ${date}. `+
-      `Find ONLY reels uploaded in the last 24 hours. Sum their view counts. `+
-      `If none posted in 24h return views:0. `+
-      `JSON only: {"views":<integer>,"reels_count":<integer>,"found":<bool>}`
+      `Today is ${date}. For each of these Instagram users: ${list} — `+
+      `search their reels page (instagram.com/USERNAME/reels/) and find reels uploaded in the last 24 hours. `+
+      `Sum the view counts for each user separately. If no reels in 24h, views=0. `+
+      `Return ONLY a JSON object where each key is the username (without @) and value is: `+
+      `{"views":<integer>,"reels_count":<integer>,"found":<bool>}. `+
+      `Example: {"user1":{"views":15000,"reels_count":2,"found":true},"user2":{"views":0,"reels_count":0,"found":false}}`
     );
-    const p=JSON.parse(raw.replace(/```\w*\n?|```/g,'').trim());
-    return{views:parseInt(p.views)||0,reels_count:parseInt(p.reels_count)||0,found:!!p.found};
-  }catch(e){console.error(e);return{views:0,reels_count:0,found:false};}
+    const cleaned=raw.replace(/```\w*\n?|```/g,'').trim();
+    const parsed=JSON.parse(cleaned);
+    const result={};
+    users.forEach(u=>{
+      const d=parsed[u]||{};
+      result[u]={views:parseInt(d.views)||0,reels_count:parseInt(d.reels_count)||0,found:!!d.found};
+    });
+    return result;
+  }catch(e){
+    console.error('fetchAllIG error:',e);
+    const fallback={};
+    users.forEach(u=>{fallback[u]={views:0,reels_count:0,found:false};});
+    return fallback;
+  }
 }
 
 async function fetchOM(url) {
@@ -345,21 +366,25 @@ async function doFetch() {
   if(!stats[today])stats[today]={accounts:{},totalClicks:0,totalFans:0};
   if(!stats[today].accounts)stats[today].accounts={};
 
-  for(const a of accs){
-    const u=gu(a.credentials);
-    stMap[a.id]='⏳'; updSt(a.id);
-    try{
-      log(`📸 @${u}...`,'info');
-      const r=await fetchIG(u);
+  // Set all to loading
+  accs.forEach(a=>{stMap[a.id]='⏳';updSt(a.id);});
+  render();
+
+  try{
+    const usernames=accs.map(a=>gu(a.credentials));
+    log(`📸 Запрос по ${usernames.length} аккаунтам...`,'info');
+    const results=await fetchAllIG(usernames);
+    accs.forEach(a=>{
+      const u=gu(a.credentials), r=results[u]||{views:0,reels_count:0,found:false};
       stats[today].accounts[a.id]=r.views;
       stMap[a.id]=r.found?'✅':'⚠️'; updSt(a.id);
       log(`${r.found?'✓':'⚠'} @${u}: ${r.reels_count} рилс → ${fmt(r.views)} views`,r.found?'ok':'warn');
-    }catch{
-      stats[today].accounts[a.id]=0; stMap[a.id]='❌'; updSt(a.id);
-      log(`✗ @${u}: ошибка`,'err');
-    }
-    render();
+    });
+  }catch(e){
+    log(`✗ Ошибка получения данных Instagram: ${e.message}`,'err');
+    accs.forEach(a=>{stats[today].accounts[a.id]=0;stMap[a.id]='❌';updSt(a.id);});
   }
+  render();
 
   try{
     log('🎯 OnlyMonster...','info');
@@ -370,12 +395,68 @@ async function doFetch() {
 
   LS.set('ig-s',stats); busy=false;
   btn.disabled=false; btn.textContent='🔄 Обновить';
-  log('✅ Готово!','ok'); render();
+  log('✅ Готово!','ok'); render(); updateErrSummary();
 }
 
 function updSt(id){
   const el=document.getElementById(`st-${id}`);
   if(el){el.textContent=stMap[id]||'';el.className='st-icon';}
+}
+
+// ERROR SUMMARY + RETRY
+function updateErrSummary() {
+  const bar = document.getElementById('err-summary');
+  if (!bar) return;
+  const errs = accs.filter(a => stMap[a.id] === '❌');
+  const warns = accs.filter(a => stMap[a.id] === '⚠️');
+  const ok = accs.filter(a => stMap[a.id] === '✅');
+  if (!accs.length || (errs.length === 0 && warns.length === 0)) {
+    bar.style.display = 'none'; return;
+  }
+  bar.style.display = 'flex';
+  let html = '';
+  if (ok.length) html += `<span style="color:#0EC99A">✅ ${ok.length} ок</span>`;
+  if (warns.length) html += `<span style="color:#FFB020;margin-left:8px">⚠️ ${warns.length} не найдено</span>`;
+  if (errs.length) {
+    const names = errs.map(a => '@' + gu(a.credentials)).join(', ');
+    html += `<span style="color:#FF4D6A;margin-left:8px" title="${names}">❌ ${errs.length} ошибка${errs.length>1?'и':''}: ${names}</span>`;
+    html += `<button class="err-badge" onclick="retryFailed()" style="margin-left:auto">🔄 Повторить ❌ (${errs.length})</button>`;
+  } else if (warns.length) {
+    const names = warns.map(a => '@' + gu(a.credentials)).join(', ');
+    html += `<span style="color:#FFB020;margin-left:4px;font-size:10px" title="${names}">(${names})</span>`;
+    html += `<button class="err-badge" onclick="retryFailed()" style="margin-left:auto;background:#1A1200;color:#FFB020;border-color:#4A3800">🔄 Повторить ⚠️ (${warns.length})</button>`;
+  }
+  bar.innerHTML = html;
+}
+
+async function retryFailed() {
+  if (busy) return;
+  const failed = accs.filter(a => stMap[a.id] === '❌' || stMap[a.id] === '⚠️');
+  if (!failed.length) return;
+  busy = true;
+  const today = dk();
+  if (!stats[today]) stats[today] = {accounts:{}, totalClicks:0, totalFans:0};
+  if (!stats[today].accounts) stats[today].accounts = {};
+  log(`🔄 Повтор для ${failed.length} аккаунтов...`, 'info');
+  failed.forEach(a => { stMap[a.id] = '⏳'; updSt(a.id); });
+  updateErrSummary();
+  try {
+    const usernames = failed.map(a => gu(a.credentials));
+    const results = await fetchAllIG(usernames);
+    failed.forEach(a => {
+      const u = gu(a.credentials), r = results[u] || {views:0,reels_count:0,found:false};
+      stats[today].accounts[a.id] = r.views;
+      stMap[a.id] = r.found ? '✅' : '⚠️'; updSt(a.id);
+      log(`${r.found?'✓':'⚠'} @${u}: ${r.reels_count} рилс → ${fmt(r.views)} views`, r.found?'ok':'warn');
+    });
+  } catch(e) {
+    failed.forEach(a => { stMap[a.id] = '❌'; updSt(a.id); });
+    log(`✗ Ошибка повтора: ${e.message}`, 'err');
+  }
+  LS.set('ig-s', stats);
+  busy = false;
+  render(); updateErrSummary();
+  log('✅ Повтор завершён', 'ok');
 }
 
 // AUTO-UPDATE

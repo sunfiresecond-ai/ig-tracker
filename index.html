@@ -113,7 +113,14 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
 .stat-pct-row td{font-size:10px!important;padding:3px 9px!important;background:#0C0C18!important;}
 .stat-pct-row .lbl{color:#55557A;font-weight:700;font-size:10px;letter-spacing:.04em;text-transform:uppercase;}
 .pct-val{display:inline-flex;align-items:center;gap:3px;font-weight:600;}
-.pct-60{color:#0EC99A;} .pct-6{color:#6ECFF0;} .pct-low{color:#FFB020;} .pct-fail{color:#FF4D6A;}
+.pct-60{color:#2ECC8A;}
+.pct-6{color:#5BB8F5;}
+.pct-low{color:#F5A84A;}
+.pct-fail{color:#FF5E6C;}
+.views-60{color:#2ECC8A!important;font-weight:700;}
+.views-6{color:#5BB8F5!important;font-weight:700;}
+.views-low{color:#F5A84A!important;font-weight:700;}
+.views-fail{color:#FF5E6C!important;}
 .total-row td.editable-total{cursor:pointer;}
 .total-row td.editable-total:hover .num{text-decoration:underline;text-underline-offset:2px;}
 .acc-name-btn{font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:115px;color:#E0E0EE;background:none;border:none;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-align:left;}
@@ -139,7 +146,7 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
   <div class="spacer"></div>
   <span class="countdown">До полуночи: <span class="cd-val" id="cd">—</span></span>
   <button class="btn btn-ghost" onclick="openCfg()">⚙ Настройки</button>
-  <button id="sort-btn" class="sort-btn" onclick="toggleSort()" title="Сортировать по просмотрам">↕ По вивам</button>
+  <button id="sort-btn" class="sort-btn" onclick="toggleSort()" title="Сортировать по просмотрам">↕ По просм.</button>
   <button class="btn btn-ghost" onclick="openAdd()">+ Аккаунты</button>
   <button class="btn btn-green" id="fetch-btn" onclick="doFetch()">🔄 Обновить</button>
 </div>
@@ -321,10 +328,19 @@ function delta(day,f) {
   const p=prevStat(day,f); return p===null?v:v-p;
 }
 
+function getViewClass(views, status) {
+  if (status==='❌'||status==='⚠️') return 'views-fail';
+  if (views == null) return '';
+  if (views >= 60000) return 'views-60';
+  if (views >= 3900)  return 'views-6';
+  if (views > 0)      return 'views-low';
+  return '';
+}
+
 function toggleSort(){
   sortByViews=!sortByViews;
   const btn=document.getElementById('sort-btn');
-  if(btn){btn.classList.toggle('active',sortByViews);btn.textContent=sortByViews?'↕ По вивам ✦':'↕ По вивам';}
+  if(btn){btn.classList.toggle('active',sortByViews);btn.textContent=sortByViews?'↕ По просм. ✦':'↕ По просм.';}
   render();
 }
 
@@ -350,7 +366,7 @@ function render() {
     const rowErrCls = stMap[a.id]==='❌'?'row-err':stMap[a.id]==='⚠️'?'row-warn':'';
     b+=`<tr class="${cls} ${rowErrCls}"><td class="acc-td" style="background:${bg}">
       <div class="acc-row">${stH}<span class="acc-at">@</span>
-        <button class="acc-name-btn" title="Нажми для редактирования" onclick="openEditAcc('${a.id}')">${u}</button>
+        <button class="acc-name-btn ${getViewClass(stats[today]?.accounts?.[a.id],stMap[a.id])}" title="Нажми для редактирования" onclick="openEditAcc('${a.id}')">${u}</button>
         <span class="acc-geo">${a.geo}</span>
         <button class="del-btn" onclick="delAcc('${a.id}')">×</button>
       </div></td>`;
@@ -360,8 +376,9 @@ function render() {
         b+=`<td class="${tc}"><input class="cell-input" id="ei-${ek}" value="${v??0}"
           onblur="commitEdit('${a.id}','${d}')" onkeydown="ek(event,'${a.id}','${d}')"></td>`;
       } else {
-        const col=v!=null?'#C0C0D8':'#33334A';
-        b+=`<td class="${tc}"><span class="cell-val" style="color:${col}" onclick="startEdit('${a.id}','${d}')">${v!=null?fmt(v):'—'}</span></td>`;
+        const vcls = d===today ? getViewClass(v, stMap[a.id]) : (v!=null?'':'');
+        const col = v!=null ? '' : '#33334A';
+        b+=`<td class="${tc}"><span class="cell-val ${vcls}" style="${v!=null?'':'color:#33334A'}" onclick="startEdit('${a.id}','${d}')">${v!=null?fmt(v):'—'}</span></td>`;
       }
     });
     b+='</tr>';
@@ -370,7 +387,7 @@ function render() {
   if(!accs.length) b=`<tr class="empty-row"><td colspan="${ds.length+1}">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>`;
   b+=`<tr class="divider-row"><td colspan="${ds.length+1}"></td></tr>`;
 
-  b+=`<tr class="total-row total-views"><td class="acc-td lbl" style="text-align:left">Всего вивов</td>`;
+  b+=`<tr class="total-row total-views"><td class="acc-td lbl" style="text-align:left">Всего просмотров</td>`;
   ds.forEach(d=>{
     const t=stats[d]?.totalViewsOverride??totViews(d),tc=d===today?'today-td':'';
     b+=`<td class="${tc} num editable-total" onclick="startEditTotal('views','${d}')">`+
@@ -393,10 +410,10 @@ function render() {
 
   // PCT STATS ROWS
   const pctRows=[
-    {id:'pct60',lbl:'>60к вивов',cls:'pct-60',test:v=>v>=60000},
-    {id:'pct6', lbl:'>6к вивов', cls:'pct-6', test:v=>v>=6000&&v<60000},
-    {id:'pctlo',lbl:'<6к вивов', cls:'pct-low',test:v=>v<6000&&v>0},
-    {id:'pctfl',lbl:'Отлетело',  cls:'pct-fail',test:(v,st)=>st==='❌'||st==='⚠️'},
+    {id:'pct60',lbl:'>60к просмотров', cls:'pct-60', test:v=>v>=60000},
+    {id:'pct6', lbl:'>3.9к просмотров',cls:'pct-6',  test:v=>v>=3900&&v<60000},
+    {id:'pctlo',lbl:'<3.9к просмотров',cls:'pct-low',test:v=>v<3900&&v>0},
+    {id:'pctfl',lbl:'Отлетело',        cls:'pct-fail',test:(v,st)=>st==='❌'||st==='⚠️'},
   ];
   pctRows.forEach(row=>{
     b+=`<tr class="stat-pct-row"><td class="acc-td lbl" style="text-align:left">${row.lbl}</td>`;

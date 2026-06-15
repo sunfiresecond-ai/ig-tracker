@@ -130,6 +130,22 @@ textarea:focus,input:focus{border-color:#7C5CFC}
 .cfult{flex:1}.cfulc{font-size:10px;background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:4px;padding:2px 7px;cursor:pointer;flex-shrink:0;transition:.15s}
 .cfulc:hover{color:#E0E0EE}
 
+/* IMAGE COLUMN */
+.img-cell{padding:3px 4px!important;text-align:center!important;vertical-align:middle!important;cursor:pointer}
+.img-thumb{width:52px;height:52px;object-fit:cover;border-radius:5px;display:block;border:1px solid #2A2A3A;transition:.15s}
+.img-thumb:hover{border-color:#7C5CFC;transform:scale(1.05)}
+.img-add{width:52px;height:52px;border:1px dashed #2A2A3A;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;font-size:20px;color:#33334A;background:none}
+.img-add:hover{border-color:#7C5CFC;color:#7C5CFC}
+/* IMAGE MODAL */
+.img-modal{background:#0D0D14;border:1px solid #2A2A3A;border-radius:14px;padding:0;max-width:92vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;width:auto}
+.img-modal-top{padding:14px 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1E1E2C}
+.img-modal-title{font-size:14px;font-weight:700;flex:1}
+.img-modal-body{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:16px;min-height:200px}
+.img-modal-body img{max-width:80vw;max-height:70vh;border-radius:8px;object-fit:contain;display:block}
+.img-modal-footer{padding:10px 18px;border-top:1px solid #1E1E2C;display:flex;gap:8px;align-items:center}
+.paste-zone{border:2px dashed #2A2A3A;border-radius:8px;padding:24px 40px;text-align:center;color:#444460;font-size:12px;cursor:pointer;transition:.15s;margin:8px 0}
+.paste-zone:hover,.paste-zone.drag{border-color:#7C5CFC;color:#7C5CFC;background:#12102A}
+.paste-zone strong{display:block;font-size:14px;margin-bottom:4px;color:#888}
 /* SETUP */
 .setup{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;display:none}
 .sc{background:#111118;border:1px solid #2A2A3A;border-radius:14px;padding:28px;width:480px;max-width:96vw}
@@ -256,6 +272,36 @@ textarea:focus,input:focus{border-color:#7C5CFC}
   </div>
 </div>
 
+<!-- IMAGE MODAL -->
+<div class="ov" id="img-m" style="display:none" onclick="if(event.target===this)closeImg()">
+  <div class="img-modal">
+    <div class="img-modal-top">
+      <span class="img-modal-title" id="img-title">Превью рилса</span>
+      <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="triggerImgFile()">📁 Файл</button>
+      <button class="btn btn-r" style="font-size:11px;padding:4px 10px" onclick="delImg()">🗑</button>
+      <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="closeImg()">✕</button>
+      <input type="file" id="img-file-input" accept="image/*" style="display:none" onchange="onImgFile(this)">
+    </div>
+    <div class="img-modal-body" id="img-body">
+      <div>
+        <div class="paste-zone" id="paste-zone" onclick="triggerImgFile()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="event.preventDefault();this.classList.remove('drag');handleDrop(event)">
+          <strong>Нет изображения</strong>
+          Нажми чтобы выбрать файл<br>или перетащи сюда<br>
+          <span style="font-size:11px;margin-top:6px;display:block;color:#555">Ctrl+V чтобы вставить из буфера</span>
+        </div>
+      </div>
+    </div>
+    <div class="img-modal-footer" id="img-footer" style="display:none">
+      <span style="font-size:11px;color:#55557A" id="img-info"></span>
+      <div style="flex:1"></div>
+      <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="triggerImgFile()">🔄 Заменить</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const APP_VERSION='1.0.0';
 const LS={
@@ -264,7 +310,7 @@ const LS={
   del:k=>{try{localStorage.removeItem(k)}catch{}}
 };
 
-let accs=[],stats={},omUrl='https://onlymonster.ai/s/to98HABPol6',
+let accs=[],stats={},thumbs={},omUrl='https://onlymonster.ai/s/to98HABPol6',
     apiKey='',updUrl='',busy=false,stMap={},editKey=null,
     baseOffset=0,numCols=15,sortStates={},sortOrder=[],lastAuto='',eaId=null;
 
@@ -355,7 +401,7 @@ function render(){
   if(nr&&ds.length)nr.textContent=dl(ds[0])+' → '+dl(ds[ds.length-1]);
 
   // HEADER
-  let h='<tr><th class="acc-col">Аккаунт</th>';
+  let h='<tr><th class="acc-col" style="vertical-align:middle">Аккаунт</th><th style="background:#0B0B12;border-right:1px solid #1E1E2C;text-align:center;min-width:62px;position:sticky;left:185px;z-index:11;padding:4px 2px;vertical-align:middle"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:#666688">🎬 РИЛС</span></th>';
   ds.forEach(d=>{
     const isTd=(d===today),isSrt=!!sortStates[d],sdir=sortStates[d];
     const arrow=sdir==='desc'?'↓':sdir==='asc'?'↑':'↕';
@@ -381,9 +427,16 @@ function render(){
     b+=`<tr class="${cls}"><td class="acc-td" style="background:${bg}">
       <div class="acc-row">${stH}<span class="acc-at">@</span>
         <button class="acc-nm ${tvc}" onclick="openEA('${a.id}')" title="Редактировать">${u}</button>
-        <span class="acc-geo">${a.geo}</span>
         <button class="del" onclick="delAcc('${a.id}')">×</button>
       </div></td>`;
+    // image cell
+    const thumb=thumbs[a.id];
+    const bg2=i%2?'#111118':'#09090F';
+    if(thumb){
+      b+=`<td class="img-cell" style="background:${bg2};position:sticky;left:185px;z-index:4" onclick="openImg('${a.id}','${u}')"><img class="img-thumb" src="${thumb}" alt="рилс"></td>`;
+    }else{
+      b+=`<td class="img-cell" style="background:${bg2};position:sticky;left:185px;z-index:4" onclick="openImg('${a.id}','${u}')"><div class="img-add">+</div></td>`;
+    }
     ds.forEach(d=>{
       const v=stats[d]?.accounts?.[a.id],ekk=`${a.id}:${d}`,tc=d===today?'td-today':'';
       const cls2=d===today?vc(v,stMap[a.id]):'';
@@ -397,10 +450,10 @@ function render(){
   });
 
   if(!accs.length)b=`<tr><td colspan="${ds.length+1}" style="padding:60px;text-align:center;color:#33334A">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>`;
-  b+=`<tr class="div-row"><td colspan="${ds.length+1}"></td></tr>`;
+  b+=`<tr class="div-row"><td colspan="${ds.length+2}"></td></tr>`;
 
   // TOTAL VIEWS
-  b+='<tr class="tr-v"><td class="acc-td lbl" style="text-align:left">Всего просмотров</td>';
+  b+='<tr class="tr-v"><td class="acc-td lbl" style="text-align:left">Всего просмотров</td><td></td>';
   ds.forEach(d=>{const t=totV(d),tc=d===today?'td-today':'';
     b+=`<td class="${tc} et" onclick="stEd('views','${d}')">`;
     b+=editKey===`_views:${d}`?`<input class="ci" id="ei-_views:${d}" value="${t||0}" onblur="ctEd('views','${d}')" onkeydown="ek2(event,'_views','${d}')">`:
@@ -409,7 +462,7 @@ function render(){
   });b+='</tr>';
 
   // CLICKS
-  b+='<tr class="tr-cl"><td class="acc-td lbl" style="text-align:left">Кликов за день</td>';
+  b+='<tr class="tr-cl"><td class="acc-td lbl" style="text-align:left">Кликов за день</td><td></td>';
   ds.forEach(d=>{const v=delta(d,'cl'),tc=d===today?'td-today':'';
     b+=`<td class="${tc} et" onclick="stEd('clicks','${d}')">`;
     b+=editKey===`_clicks:${d}`?`<input class="ci" id="ei-_clicks:${d}" value="${v??0}" onblur="ctEd('clicks','${d}')" onkeydown="ek2(event,'_clicks','${d}')">`:
@@ -418,7 +471,7 @@ function render(){
   });b+='</tr>';
 
   // FANS
-  b+='<tr class="tr-fa"><td class="acc-td lbl" style="text-align:left">Фанов за день</td>';
+  b+='<tr class="tr-fa"><td class="acc-td lbl" style="text-align:left">Фанов за день</td><td></td>';
   ds.forEach(d=>{const v=delta(d,'fa'),tc=d===today?'td-today':'';
     b+=`<td class="${tc} et" onclick="stEd('fans','${d}')">`;
     b+=editKey===`_fans:${d}`?`<input class="ci" id="ei-_fans:${d}" value="${v??0}" onblur="ctEd('fans','${d}')" onkeydown="ek2(event,'_fans','${d}')">`:
@@ -434,7 +487,15 @@ function render(){
     {lbl:'Отлетело',         cls:'pfl',fn:(v,id,d)=>d===today&&(stMap[id]==='❌'||stMap[id]==='⚠️')},
   ];
   pctRows.forEach(row=>{
-    b+=`<tr class="tr-pct"><td class="acc-td lbl" style="text-align:left;color:#55557A">${row.lbl}</td>`;
+    b+=`<tr class="tr-pct"><td class="acc-td lbl" style="text-align:left;color:#55557A">${row.lbl}</td><td></td>`;
+    // image cell
+    const thumb=thumbs[a.id];
+    const bg2=i%2?'#111118':'#09090F';
+    if(thumb){
+      b+=`<td class="img-cell" style="background:${bg2};position:sticky;left:185px;z-index:4" onclick="openImg('${a.id}','${u}')"><img class="img-thumb" src="${thumb}" alt="рилс"></td>`;
+    }else{
+      b+=`<td class="img-cell" style="background:${bg2};position:sticky;left:185px;z-index:4" onclick="openImg('${a.id}','${u}')"><div class="img-add">+</div></td>`;
+    }
     ds.forEach(d=>{
       const tc=d===today?'td-today':'';
       if(!stats[d]||!accs.length){b+=`<td class="${tc}">—</td>`;return;}
@@ -678,6 +739,71 @@ function showUpdBanner(html,ver){
 }
 function applyPending(){const p=LS.get('ig-pending');if(!p)return;LS.del('ig-pending');document.open();document.write(p);document.close();}
 
+// ── IMAGE FUNCTIONS ──
+let curImgId=null;
+function openImg(id,name){
+  curImgId=id;
+  document.getElementById('img-title').textContent='@'+name+' — рилс';
+  refreshImgModal();
+  document.getElementById('img-m').style.display='flex';
+}
+function closeImg(){document.getElementById('img-m').style.display='none';curImgId=null;}
+function refreshImgModal(){
+  const th=thumbs[curImgId];
+  const body=document.getElementById('img-body');
+  const footer=document.getElementById('img-footer');
+  const zone=document.getElementById('paste-zone');
+  if(th){
+    body.innerHTML='<img src="'+th+'" style="max-width:80vw;max-height:70vh;border-radius:8px;object-fit:contain;display:block">';
+    footer.style.display='flex';
+    const info=document.getElementById('img-info');
+    if(info)info.textContent='Нажми «Заменить» чтобы обновить';
+  }else{
+    body.innerHTML='<div><div class="paste-zone" id="paste-zone" onclick="triggerImgFile()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');handleDrop(event)"><strong>Нет изображения</strong>Нажми чтобы выбрать файл<br>или перетащи сюда<br><span style="font-size:11px;margin-top:6px;display:block;color:#555">Ctrl+V чтобы вставить из буфера</span></div></div>';
+    footer.style.display='none';
+  }
+}
+function triggerImgFile(){document.getElementById('img-file-input').click();}
+function onImgFile(inp){
+  if(!inp.files[0])return;
+  compressImg(inp.files[0],800,img=>{saveThumb(img);});
+  inp.value='';
+}
+function handleDrop(e){
+  const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))compressImg(f,800,saveThumb);
+}
+function compressImg(file,maxPx,cb){
+  const url=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{
+    let w=img.width,h=img.height;
+    if(w>maxPx||h>maxPx){if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;}}
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    URL.revokeObjectURL(url);
+    cb(cv.toDataURL('image/jpeg',0.82));
+  };
+  img.src=url;
+}
+function saveThumb(dataUrl){
+  if(!curImgId)return;
+  thumbs[curImgId]=dataUrl;
+  LS.set('ig-th',thumbs);
+  refreshImgModal();render();
+}
+function delImg(){
+  if(!curImgId)return;
+  delete thumbs[curImgId];
+  LS.set('ig-th',thumbs);
+  refreshImgModal();render();
+}
+// paste from clipboard
+document.addEventListener('paste',e=>{
+  if(document.getElementById('img-m').style.display==='none')return;
+  const item=Array.from(e.clipboardData.items).find(i=>i.type.startsWith('image/'));
+  if(item)compressImg(item.getAsFile(),800,saveThumb);
+});
+
 // ── SHOW MAIN ──
 function showMain(){
   document.getElementById('setup').style.display='none';
@@ -712,8 +838,8 @@ setInterval(checkUpd,30*60*1000);
 // ── INIT ──
 (function(){
   applyPending();
-  const k=LS.get('ig-k'),a=LS.get('ig-a'),s=LS.get('ig-s'),c=LS.get('ig-c');
-  if(a)accs=a;if(s)stats=s;
+  const k=LS.get('ig-k'),a=LS.get('ig-a'),s=LS.get('ig-s'),c=LS.get('ig-c'),th=LS.get('ig-th');
+  if(a)accs=a;if(s)stats=s;if(th)thumbs=th;
   if(c?.om)omUrl=c.om;if(c?.upd)updUrl=c.upd;
   if(k){apiKey=k;showMain();}
   else document.getElementById('setup').style.display='flex';

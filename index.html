@@ -2,495 +2,464 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IG Tracker</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;}
-body{font-family:Inter,system-ui,sans-serif;background:#09090F;color:#E0E0EE;display:flex;flex-direction:column;font-size:13px;height:100vh;overflow:hidden;}
-::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:#111118;}
-::-webkit-scrollbar-thumb{background:#2A2A3A;border-radius:4px;}
-.header{background:#111118;border-bottom:1px solid #1E1E2C;padding:9px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.header-title{font-weight:700;font-size:14px;letter-spacing:-.02em;}
-.spacer{flex:1;}
-.countdown{font-family:monospace;font-size:11px;color:#666688;}
-.cd-val{color:#7C5CFC;font-weight:600;}
-.btn{border:none;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:opacity .15s,background .15s;}
-.btn:disabled{opacity:.4;cursor:not-allowed;}
-.btn-ghost{background:#1A1A26;color:#A0A0C0;}
-.btn-ghost:hover:not(:disabled){background:#22222E;}
-.btn-green{background:#0EC99A;color:#000;}
-.btn-green:hover:not(:disabled){background:#0DB88C;}
-.btn-purple{background:#7C5CFC;color:#fff;}
-.btn-purple:hover:not(:disabled){background:#6A4CE0;}
-.btn-red{background:#3A1018;color:#FF4D6A;}
-.btn-red:hover{background:#4A1520;}
-.body{display:flex;flex:1;overflow:hidden;min-height:0;}
-.table-wrap{flex:1;overflow:auto;}
-table{border-collapse:collapse;min-width:100%;}
-thead th{padding:7px 9px;border-right:1px solid #1E1E2C;font-size:10px;color:#666688;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:#0B0B12;position:sticky;top:0;z-index:10;white-space:nowrap;}
-thead th.today-h{background:#12102A;color:#7C5CFC;}
-th.acc-col{text-align:left;min-width:185px;position:sticky;left:0;z-index:20;background:#0B0B12;}
-td{padding:5px 9px;border-right:1px solid #1E1E2C;font-size:12px;white-space:nowrap;text-align:right;color:#C0C0D8;}
-td.acc-td{text-align:left;position:sticky;left:0;z-index:5;min-width:185px;}
-td.today-td{background:#12102A!important;}
-tr.row-even td{background:#111118;}
-tr.row-odd td{background:transparent;}
-.acc-row{display:flex;align-items:center;gap:5px;overflow:hidden;}
-.st-icon{font-size:11px;width:16px;text-align:center;flex-shrink:0;display:inline-block;}
-.st-dot{width:6px;height:6px;border-radius:50%;background:#2A2A3A;flex-shrink:0;display:inline-block;vertical-align:middle;}
-.acc-at{font-family:monospace;font-size:10px;color:#44445A;flex-shrink:0;}
-.acc-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:115px;color:#E0E0EE;}
-.acc-geo{font-size:10px;color:#44445A;margin-left:auto;flex-shrink:0;padding-right:2px;}
-.del-btn{background:none;border:none;color:#2A2A3A;cursor:pointer;font-size:15px;line-height:1;padding:0 2px;flex-shrink:0;transition:color .1s;}
-.del-btn:hover{color:#FF4D6A;}
-.cell-val{cursor:pointer;transition:color .1s;}
-.cell-val:hover{color:#7C5CFC;}
-.cell-input{width:70px;background:#1A1A28;color:#E0E0EE;border:1px solid #7C5CFC;border-radius:3px;padding:2px 5px;font-size:11px;text-align:right;outline:none;font-family:inherit;}
-.divider-row td{height:3px;background:#222233;padding:0;}
-.total-row td{font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;}
-.total-views td{background:#100D22!important;} .total-views .lbl{color:#7C5CFC;} .total-views .num{color:#7C5CFC;}
-.total-clicks td{background:#081512!important;} .total-clicks .lbl{color:#0EC99A;} .total-clicks .num{color:#0EC99A;}
-.total-fans td{background:#14080F!important;} .total-fans .lbl{color:#FF5FA0;} .total-fans .num{color:#FF5FA0;}
-.empty-row td{padding:50px;text-align:center;color:#33334A;font-size:13px;}
-.log-panel{width:210px;border-left:1px solid #1E1E2C;background:#111118;display:flex;flex-direction:column;flex-shrink:0;}
-.log-header{padding:7px 12px;border-bottom:1px solid #1E1E2C;font-size:10px;color:#55557A;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
-.log-body{flex:1;overflow-y:auto;padding:5px 8px;}
-.log-empty{color:#33334A;font-size:11px;text-align:center;margin-top:18px;}
-.log-entry{font-family:monospace;font-size:10px;padding:1.5px 0;line-height:1.5;word-break:break-word;}
-.log-ok{color:#0EC99A;} .log-err{color:#FF4D6A;} .log-warn{color:#FFB020;} .log-info{color:#55557A;}
-.log-footer{padding:6px 10px;border-top:1px solid #1E1E2C;font-size:9.5px;color:#33334A;line-height:1.5;}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:500;}
-.modal{background:#111118;border:1px solid #2A2A3A;border-radius:12px;padding:22px;width:500px;max-width:96vw;}
-.modal-title{font-size:15px;font-weight:700;margin-bottom:6px;color:#E0E0EE;}
-.modal-sub{font-size:11px;color:#666688;margin-bottom:10px;line-height:1.6;}
-.modal-sub code{color:#7C5CFC;font-family:monospace;background:#1A1A2A;padding:1px 5px;border-radius:3px;}
-.field-label{font-size:11px;color:#666688;display:block;margin-bottom:4px;margin-top:13px;}
-.field-hint{font-size:10px;color:#44445A;margin-top:4px;line-height:1.5;}
-textarea,input[type=text],input[type=password]{width:100%;background:#09090F;border:1px solid #1E1E2C;border-radius:6px;padding:8px 10px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;resize:vertical;transition:border-color .15s;}
-textarea:focus,input:focus{border-color:#7C5CFC;}
-.modal-row{display:flex;gap:8px;margin-top:9px;align-items:center;}
-.modal-label{font-size:12px;color:#666688;flex-shrink:0;}
-.geo-input{width:80px!important;resize:none;height:32px;padding:4px 8px;font-family:inherit!important;}
-.modal-count{margin-left:auto;font-size:11px;color:#555577;}
-.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
-.api-key-wrap{position:relative;}
-.api-key-wrap input{padding-right:38px;}
-.toggle-pw{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#555577;cursor:pointer;font-size:14px;padding:0;}
-.sep{height:1px;background:#1E1E2C;margin:14px 0;}
-.api-badge{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle;}
-.api-ok{background:#0A2018;color:#0EC99A;} .api-miss{background:#200A0A;color:#FF4D6A;}
-.info-box{background:#0F1A28;border:1px solid #1A3050;border-radius:6px;padding:10px 12px;font-size:11px;color:#6090C0;line-height:1.6;margin-top:8px;}
-.info-box strong{color:#80B0E0;}
-.setup-screen{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;}
-.setup-card{background:#111118;border:1px solid #2A2A3A;border-radius:14px;padding:28px;width:480px;max-width:96vw;}
-.setup-icon{font-size:32px;margin-bottom:8px;display:block;}
-.setup-title{font-size:18px;font-weight:700;margin-bottom:8px;}
-.setup-desc{font-size:12px;color:#666688;line-height:1.7;margin-bottom:16px;}
-.setup-desc a{color:#7C5CFC;text-decoration:none;}
-.upd-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1A1430;border:1px solid #7C5CFC;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px;z-index:400;animation:slideUp .3s ease;}
-@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.upd-text{font-size:12px;color:#C0A0FF;}
-.upd-text strong{color:#E0D0FF;font-weight:600;}
-.upd-close{background:none;border:none;color:#555577;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
-.nav-btn{background:#1A1A26;border:1px solid #1E1E2C;color:#A0A0C0;border-radius:6px;padding:4px 11px;font-size:13px;cursor:pointer;font-weight:700;transition:all .15s;flex-shrink:0;line-height:1;}
-.nav-btn:hover{background:#22222E;border-color:#333348;}
-.nav-bar{display:flex;align-items:center;gap:6px;padding:5px 14px;border-bottom:1px solid #1E1E2C;background:#0D0D14;flex-shrink:0;}
-.nav-range{font-size:11px;color:#55557A;font-family:monospace;flex:1;text-align:center;}
-.th-sortable{cursor:pointer;user-select:none;}
-.th-sortable:hover{color:#A0A0FF!important;background:#14122A!important;}
-.th-sorted{color:#7C5CFC!important;background:#12102A!important;}
-.sort-arrow{font-size:9px;margin-left:3px;opacity:.7;}
-.th-inner{display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;}
-.col-sort-btn{background:#151520;border:1px solid #252535;color:#55557A;border-radius:4px;padding:1px 8px;font-size:11px;cursor:pointer;line-height:1.5;display:block;width:calc(100% - 4px);text-align:center;transition:all .12s;font-weight:700;}
-.col-sort-btn:hover{border-color:#7C5CFC;color:#A080FF;background:#1A1030;}
-.col-sort-btn.active-sort{color:#E0D0FF;border-color:#7C5CFC;background:#1A1030;}
-.cred-grid{display:grid;grid-template-columns:80px 1fr auto;gap:6px 8px;align-items:center;margin-top:4px;}
-.cred-label{font-size:11px;color:#666688;text-align:right;}
-.cred-input{background:#09090F;border:1px solid #1E1E2C;border-radius:5px;padding:6px 9px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;width:100%;transition:border-color .15s;}
-.cred-input:focus{border-color:#7C5CFC;}
-.cred-actions{display:flex;gap:3px;}
-.cred-btn{background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
-.cred-btn:hover{border-color:#444;color:#C0C0D8;}
-.cred-btn.copied{background:#0A2018;border-color:#0EC99A;color:#0EC99A;}
-.cred-full{font-size:10px;color:#33334A;font-family:monospace;background:#0D0D16;border:1px solid #1A1A2A;border-radius:5px;padding:7px 9px;margin-top:8px;word-break:break-all;line-height:1.6;cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
-.cred-full:hover{border-color:#2A2A3A;}
-.cred-full-text{flex:1;}
-.cred-full-copy{font-size:10px;background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:4px;padding:2px 7px;cursor:pointer;flex-shrink:0;transition:all .15s;}
-.cred-full-copy:hover{color:#E0E0EE;}
-.stat-pct-row td{font-size:10px!important;padding:3px 9px!important;background:#0C0C18!important;}
-.stat-pct-row .lbl{color:#55557A;font-weight:700;font-size:10px;letter-spacing:.04em;text-transform:uppercase;}
-.pct-val{display:inline-flex;align-items:center;gap:3px;font-weight:600;}
-.pct-60{color:#2ECC8A;}
-.pct-6{color:#5BB8F5;}
-.pct-low{color:#F5A84A;}
-.pct-fail{color:#FF5E6C;}
-.views-60{color:#2ECC8A!important;font-weight:700;}
-.views-6{color:#5BB8F5!important;font-weight:700;}
-.views-low{color:#F5A84A!important;font-weight:700;}
-.views-fail{color:#FF5E6C!important;}
-.total-row td.editable-total{cursor:pointer;}
-.total-row td.editable-total:hover .num{text-decoration:underline;text-underline-offset:2px;}
-.acc-name-btn{font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:115px;color:#E0E0EE;background:none;border:none;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-align:left;}
-.acc-name-btn:hover{color:#7C5CFC;text-decoration:underline;}
-.cred-grid{display:grid;grid-template-columns:90px 1fr;gap:6px 10px;align-items:center;margin-top:4px;}
-.cred-label{font-size:11px;color:#666688;text-align:right;}
-.cred-input{background:#09090F;border:1px solid #1E1E2C;border-radius:5px;padding:6px 9px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;width:100%;transition:border-color .15s;}
-.cred-input:focus{border-color:#7C5CFC;}
-.cred-full{font-size:10px;color:#33334A;font-family:monospace;background:#0D0D16;border:1px solid #1A1A2A;border-radius:5px;padding:7px 9px;margin-top:10px;word-break:break-all;line-height:1.6;cursor:pointer;}
-.cred-full:hover{border-color:#2A2A3A;color:#44445A;}
-.row-err td.acc-td{border-left:2px solid #FF4D6A!important;}
-.row-warn td.acc-td{border-left:2px solid #FFB020!important;}
-.err-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:#2A0A0E;color:#FF4D6A;border:1px solid #5A1520;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600;transition:background .15s;}
-.err-badge:hover{background:#3A1018;}
-.err-summary{display:flex;align-items:center;gap:8px;padding:6px 10px;border-top:1px solid #1E1E2C;flex-shrink:0;font-size:11px;color:#55557A;min-height:32px;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,sans-serif;background:#09090F;color:#E0E0EE;display:flex;flex-direction:column;font-size:13px;height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#111118}
+::-webkit-scrollbar-thumb{background:#2A2A3A;border-radius:4px}
+
+/* HEADER */
+.hdr{background:#111118;border-bottom:1px solid #1E1E2C;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hdr-title{font-weight:700;font-size:14px;letter-spacing:-.02em}
+.sp{flex:1}
+.cd{font-family:monospace;font-size:11px;color:#666688}
+.cd b{color:#7C5CFC}
+.btn{border:none;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:.15s}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-g{background:#1A1A26;color:#A0A0C0}.btn-g:hover:not(:disabled){background:#22222E}
+.btn-gr{background:#0EC99A;color:#000}.btn-gr:hover:not(:disabled){background:#0DB88C}
+.btn-p{background:#7C5CFC;color:#fff}.btn-p:hover:not(:disabled){background:#6A4CE0}
+.btn-r{background:#3A1018;color:#FF4D6A}
+
+/* NAV BAR */
+.nav{background:#0D0D14;border-bottom:1px solid #1E1E2C;padding:5px 14px;display:none;align-items:center;gap:6px;flex-shrink:0}
+.nav-btn{background:#1A1A26;border:1px solid #1E1E2C;color:#A0A0C0;border-radius:6px;padding:3px 10px;font-size:13px;cursor:pointer;font-weight:700;line-height:1;transition:.15s}
+.nav-btn:hover{background:#22222E;border-color:#333}
+.nav-range{font-size:11px;color:#55557A;font-family:monospace;flex:1;text-align:center}
+
+/* BODY */
+.body{display:none;flex:1;overflow:hidden;min-height:0}
+.tbl-wrap{flex:1;overflow:auto}
+table{border-collapse:collapse;min-width:100%}
+
+/* TABLE CELLS */
+th{padding:0;border-right:1px solid #1E1E2C;background:#0B0B12;position:sticky;top:0;z-index:10;white-space:nowrap;vertical-align:top}
+th.acc-col{text-align:left;min-width:185px;position:sticky;left:0;z-index:20;vertical-align:middle;padding:8px 9px;font-size:10px;color:#666688;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.th-date{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 4px 4px}
+.th-label{font-size:10px;font-weight:700;letter-spacing:.06em;color:#666688;white-space:nowrap}
+.th-label.today{color:#7C5CFC}
+.sort-btn{border:1px solid #252535;background:#151520;color:#606080;border-radius:4px;padding:1px 0;width:90%;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;line-height:1.5;display:block;transition:.12s}
+.sort-btn:hover{border-color:#7C5CFC;color:#A080FF;background:#1A1030}
+.sort-btn.on{border-color:#7C5CFC;background:#1A1030;color:#C0A0FF}
+td{padding:5px 9px;border-right:1px solid #1E1E2C;font-size:12px;white-space:nowrap;text-align:right;color:#C0C0D8}
+td.acc-td{text-align:left;position:sticky;left:0;z-index:5;min-width:185px}
+td.td-today{background:#12102A!important}
+tr.r-even td{background:#111118}
+tr.r-odd td{background:transparent}
+.acc-row{display:flex;align-items:center;gap:5px;overflow:hidden}
+.st{font-size:11px;width:16px;text-align:center;flex-shrink:0;display:inline-block}
+.dot{width:6px;height:6px;border-radius:50%;background:#2A2A3A;flex-shrink:0;display:inline-block;vertical-align:middle}
+.acc-at{font-family:monospace;font-size:10px;color:#44445A;flex-shrink:0}
+.acc-nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:110px;color:#E0E0EE;background:none;border:none;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-align:left}
+.acc-nm:hover{color:#7C5CFC;text-decoration:underline}
+.acc-geo{font-size:10px;color:#44445A;margin-left:auto;flex-shrink:0}
+.del{background:none;border:none;color:#2A2A3A;cursor:pointer;font-size:15px;line-height:1;padding:0 2px;flex-shrink:0;transition:.1s}
+.del:hover{color:#FF4D6A}
+.cv{cursor:pointer;transition:.1s}.cv:hover{color:#7C5CFC}
+.ci{width:68px;background:#1A1A28;color:#E0E0EE;border:1px solid #7C5CFC;border-radius:3px;padding:2px 4px;font-size:11px;text-align:right;outline:none;font-family:inherit}
+.div-row td{height:3px;background:#222233;padding:0}
+
+/* TOTAL ROWS */
+.tr-v td{background:#100D22!important;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+.tr-v .lbl{color:#7C5CFC}.tr-v .num{color:#7C5CFC}
+.tr-cl td{background:#081512!important;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+.tr-cl .lbl{color:#0EC99A}.tr-cl .num{color:#0EC99A}
+.tr-fa td{background:#14080F!important;font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+.tr-fa .lbl{color:#FF5FA0}.tr-fa .num{color:#FF5FA0}
+.tr-pct td{background:#0C0C18!important;font-size:10px!important;padding:3px 9px!important}
+.tr-pct .lbl{font-weight:700;font-size:10px;letter-spacing:.04em;text-transform:uppercase}
+.et{cursor:pointer}.et .num:hover{text-decoration:underline;text-underline-offset:2px}
+
+/* COLORS */
+.v60{color:#2ECC8A!important;font-weight:700}
+.v6{color:#5BB8F5!important;font-weight:700}
+.vlo{color:#F5A84A!important;font-weight:700}
+.vfl{color:#FF5E6C!important}
+.p60{color:#2ECC8A}.p6{color:#5BB8F5}.plo{color:#F5A84A}.pfl{color:#FF5E6C}
+
+/* LOG */
+.log-panel{width:210px;border-left:1px solid #1E1E2C;background:#111118;display:flex;flex-direction:column;flex-shrink:0}
+.log-hdr{padding:7px 12px;border-bottom:1px solid #1E1E2C;font-size:10px;color:#55557A;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.log-body{flex:1;overflow-y:auto;padding:5px 8px}
+.le{font-family:monospace;font-size:10px;padding:1.5px 0;line-height:1.5;word-break:break-word}
+.lok{color:#0EC99A}.lerr{color:#FF4D6A}.lwrn{color:#FFB020}.linf{color:#55557A}
+.log-ft{padding:6px 10px;border-top:1px solid #1E1E2C;font-size:9.5px;color:#33334A;line-height:1.5}
+
+/* ERR SUMMARY */
+.err-bar{display:none;align-items:center;gap:8px;padding:5px 10px;border-top:1px solid #1E1E2C;flex-shrink:0;font-size:11px;color:#55557A;min-height:30px}
+.err-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:#2A0A0E;color:#FF4D6A;border:1px solid #5A1520;border-radius:6px;padding:3px 10px;cursor:pointer;font-weight:600}
+.err-badge:hover{background:#3A1018}
+
+/* OVERLAY & MODALS */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:500}
+.modal{background:#111118;border:1px solid #2A2A3A;border-radius:12px;padding:22px;width:500px;max-width:96vw}
+.mtitle{font-size:15px;font-weight:700;margin-bottom:6px;color:#E0E0EE}
+.msub{font-size:11px;color:#666688;margin-bottom:10px;line-height:1.6}
+.msub code{color:#7C5CFC;font-family:monospace;background:#1A1A2A;padding:1px 5px;border-radius:3px}
+.fl{font-size:11px;color:#666688;display:block;margin-bottom:4px;margin-top:13px}
+.fhint{font-size:10px;color:#44445A;margin-top:4px;line-height:1.5}
+textarea,input[type=text],input[type=password]{width:100%;background:#09090F;border:1px solid #1E1E2C;border-radius:6px;padding:8px 10px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;resize:vertical;transition:.15s}
+textarea:focus,input:focus{border-color:#7C5CFC}
+.mrow{display:flex;gap:8px;margin-top:9px;align-items:center}
+.mlbl{font-size:12px;color:#666688;flex-shrink:0}
+.geo-i{width:80px!important;resize:none;height:32px;padding:4px 8px;font-family:inherit!important}
+.mcnt{margin-left:auto;font-size:11px;color:#555577}
+.mact{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.kw{position:relative}.kw input{padding-right:38px}
+.tpw{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#555577;cursor:pointer;font-size:14px;padding:0}
+.sep{height:1px;background:#1E1E2C;margin:14px 0}
+.ab{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.ab-ok{background:#0A2018;color:#0EC99A}.ab-no{background:#200A0A;color:#FF4D6A}
+.ibox{background:#0F1A28;border:1px solid #1A3050;border-radius:6px;padding:10px 12px;font-size:11px;color:#6090C0;line-height:1.6;margin-top:8px}
+.ibox strong{color:#80B0E0}
+
+/* CRED GRID */
+.cg{display:grid;grid-template-columns:80px 1fr auto;gap:6px 8px;align-items:center;margin-top:4px}
+.clbl{font-size:11px;color:#666688;text-align:right}
+.ci2{background:#09090F;border:1px solid #1E1E2C;border-radius:5px;padding:6px 9px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;width:100%;transition:.15s}
+.ci2:focus{border-color:#7C5CFC}
+.ca{display:flex;gap:3px}
+.cb{background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;transition:.15s}
+.cb:hover{border-color:#444;color:#C0C0D8}
+.cb.cp{background:#0A2018;border-color:#0EC99A;color:#0EC99A}
+.cful{font-size:10px;color:#33334A;font-family:monospace;background:#0D0D16;border:1px solid #1A1A2A;border-radius:5px;padding:7px 9px;margin-top:8px;word-break:break-all;line-height:1.6;display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.cfult{flex:1}.cfulc{font-size:10px;background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:4px;padding:2px 7px;cursor:pointer;flex-shrink:0;transition:.15s}
+.cfulc:hover{color:#E0E0EE}
+
+/* SETUP */
+.setup{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;display:none}
+.sc{background:#111118;border:1px solid #2A2A3A;border-radius:14px;padding:28px;width:480px;max-width:96vw}
+.si{font-size:32px;margin-bottom:8px;display:block}
+.stitle{font-size:18px;font-weight:700;margin-bottom:8px}
+.sdesc{font-size:12px;color:#666688;line-height:1.7;margin-bottom:16px}
+.sdesc a{color:#7C5CFC;text-decoration:none}
+
+/* UPDATE BANNER */
+.upd{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1A1430;border:1px solid #7C5CFC;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px;z-index:400;animation:su .3s ease}
+@keyframes su{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.utxt{font-size:12px;color:#C0A0FF}.utxt strong{color:#E0D0FF;font-weight:600}
+.ucls{background:none;border:none;color:#555577;cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
 </style>
 </head>
 <body>
 
-<div class="header" id="hdr" style="display:none">
-  <span class="header-title">📊 IG Tracker</span>
+<!-- HEADER -->
+<div class="hdr" id="hdr" style="display:none">
+  <span class="hdr-title">📊 IG Tracker</span>
   <span id="ver" style="font-size:10px;color:#33334A;font-family:monospace;padding:2px 6px;background:#0D0D16;border-radius:4px;border:1px solid #1E1E2C"></span>
-  <div class="spacer"></div>
-  <span class="countdown">До полуночи: <span class="cd-val" id="cd">—</span></span>
-  <button class="btn btn-ghost" onclick="openCfg()">⚙ Настройки</button>
-  <button class="btn btn-ghost" onclick="openAdd()">+ Аккаунты</button>
-  <button class="btn btn-green" id="fetch-btn" onclick="doFetch()">🔄 Обновить</button>
+  <div class="sp"></div>
+  <span class="cd">До полуночи: <b id="cd">—</b></span>
+  <button class="btn btn-g" onclick="openCfg()">⚙ Настройки</button>
+  <button class="btn btn-g" onclick="openAdd()">+ Аккаунты</button>
+  <button class="btn btn-gr" id="fb" onclick="doFetch()">🔄 Обновить</button>
 </div>
 
-<div class="nav-bar" id="nav-bar" style="display:none">
-  <button class="nav-btn" onclick="navShift(30)" title="Ещё старее −30 дней">▶▶</button>
-  <button class="nav-btn" onclick="navShift(7)"  title="Назад −7 дней">▶</button>
-  <span class="nav-range" id="nav-range">—</span>
-  <button class="nav-btn" onclick="navShift(-7)"  title="Вперёд +7 дней">◀</button>
-  <button class="nav-btn" onclick="navShift(-30)" title="Вперёд +30 дней">◀◀</button>
+<!-- NAV BAR -->
+<div class="nav" id="nav">
+  <button class="nav-btn" onclick="navShift(30)" title="−30 дней">◀◀</button>
+  <button class="nav-btn" onclick="navShift(7)"  title="−7 дней">◀</button>
+  <span class="nav-range" id="nr">—</span>
+  <button class="nav-btn" onclick="navShift(-7)"  title="+7 дней">▶</button>
+  <button class="nav-btn" onclick="navShift(-30)" title="+30 дней">▶▶</button>
   <button class="nav-btn" onclick="navReset()" style="font-size:10px;padding:4px 9px">Сегодня</button>
 </div>
-<div class="body" id="bdy" style="display:none">
-  <div class="table-wrap">
+
+<!-- MAIN BODY -->
+<div class="body" id="bdy">
+  <div class="tbl-wrap">
     <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
   </div>
-  <div id="err-summary" class="err-summary" style="display:none"></div>
   <div class="log-panel">
-    <div class="log-header">Лог</div>
-    <div class="log-body" id="log"><div class="log-empty">Ожидание...</div></div>
-    <div class="log-footer">Авто-обновление в 23:55<br>Клик на ячейку = ручной ввод</div>
+    <div class="log-hdr">Лог</div>
+    <div class="log-body" id="log"><div class="le linf" style="text-align:center;margin-top:16px">Ожидание...</div></div>
+    <div id="err-bar" class="err-bar"></div>
+    <div class="log-ft">Авто-обновление в 23:55<br>Клик на ячейку = ручной ввод</div>
   </div>
 </div>
 
-<div class="setup-screen" id="setup" style="display:none">
-  <div class="setup-card">
-    <span class="setup-icon">📊</span>
-    <div class="setup-title">IG Tracker — первый запуск</div>
-    <div class="setup-desc">
-      Для сбора данных приложение использует Anthropic API.<br>
-      Получи ключ на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key
-    </div>
-    <label class="field-label">Anthropic API Key</label>
-    <div class="api-key-wrap">
-      <input type="password" id="setup-key" placeholder="sk-ant-api03-..." oninput="validateSetup()">
-      <button class="toggle-pw" onclick="togglePw('setup-key',this)">👁</button>
-    </div>
-    <div class="info-box" style="margin-top:12px">
-      <strong>Ключ хранится только в этом браузере</strong> и передаётся только на api.anthropic.com при запросах данных.
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-purple" id="setup-btn" onclick="doSetup()" disabled>Начать →</button>
-    </div>
+<!-- SETUP -->
+<div class="setup" id="setup">
+  <div class="sc">
+    <span class="si">📊</span>
+    <div class="stitle">IG Tracker — первый запуск</div>
+    <div class="sdesc">Для сбора данных приложение использует Anthropic API.<br>
+    Получи ключ на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key</div>
+    <label class="fl">Anthropic API Key</label>
+    <div class="kw"><input type="password" id="sk" placeholder="sk-ant-api03-..." oninput="vs()"><button class="tpw" onclick="tp('sk',this)">👁</button></div>
+    <div class="ibox" style="margin-top:12px"><strong>Ключ хранится только в этом браузере</strong> и передаётся только на api.anthropic.com.</div>
+    <div class="mact"><button class="btn btn-p" id="sb" onclick="doSetup()" disabled>Начать →</button></div>
   </div>
 </div>
 
-<!-- ADD -->
-<div class="overlay" id="add-modal" style="display:none" onclick="if(event.target===this)closeAdd()">
+<!-- ADD MODAL -->
+<div class="ov" id="add-m" style="display:none" onclick="if(event.target===this)closeAdd()">
   <div class="modal">
-    <div class="modal-title">Добавить аккаунты</div>
-    <div class="modal-sub">Формат: <code>login:pass:email:emailpass:key</code> — по одному на строку</div>
-    <textarea id="add-txt" rows="7" placeholder="joseolanosastreria:pass:email@ex.com:epass:KEY&#10;hayaanueva99:pass2:email2@ex.com:epass2:KEY2"></textarea>
-    <div class="modal-row">
-      <span class="modal-label">ГЕО:</span>
-      <input type="text" id="add-geo" class="geo-input" value="GEO" style="resize:none;height:32px;padding:4px 8px;font-family:inherit;">
-      <span class="modal-count" id="add-cnt">0 строк</span>
+    <div class="mtitle">Добавить аккаунты</div>
+    <div class="msub">Формат: <code>login:pass:email:emailpass:key</code> — по одному на строку</div>
+    <textarea id="at" rows="7" placeholder="joseolanosastreria:pass:email@ex.com:epass:KEY&#10;hayaanueva99:pass2:email2@ex.com:epass2:KEY2"></textarea>
+    <div class="mrow">
+      <span class="mlbl">ГЕО:</span>
+      <input type="text" id="ag" class="geo-i" value="GEO" style="resize:none;height:32px;padding:4px 8px;font-family:inherit">
+      <span class="mcnt" id="ac">0 строк</span>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeAdd()">Отмена</button>
-      <button class="btn btn-purple" onclick="addAccs()">Добавить →</button>
-    </div>
-  </div>
-</div>
-
-<!-- SETTINGS -->
-<div class="overlay" id="cfg-modal" style="display:none" onclick="if(event.target===this)closeCfg()">
-  <div class="modal">
-    <div class="modal-title">⚙ Настройки</div>
-
-    <label class="field-label">Anthropic API Key <span class="api-badge" id="api-badge"></span></label>
-    <div class="api-key-wrap">
-      <input type="password" id="cfg-key" placeholder="sk-ant-api03-...">
-      <button class="toggle-pw" onclick="togglePw('cfg-key',this)">👁</button>
-    </div>
-
-    <div class="sep"></div>
-
-    <label class="field-label">OnlyMonster URL</label>
-    <input type="text" id="cfg-om" placeholder="https://onlymonster.ai/s/...">
-
-    <div class="sep"></div>
-
-    <label class="field-label">URL для авто-обновлений</label>
-    <input type="text" id="cfg-upd" placeholder="https://raw.githubusercontent.com/username/repo/main/ig-tracker.html">
-    <div class="field-hint">
-      Raw-ссылка на файл в GitHub. Когда загрузишь новую версию — приложение покажет кнопку «Установить».
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeCfg()">Отмена</button>
-      <button class="btn btn-red" onclick="clearStats()" style="margin-right:auto">🗑 Сбросить статистику</button>
-      <button class="btn btn-purple" onclick="saveCfg()">Сохранить</button>
+    <div class="mact">
+      <button class="btn btn-g" onclick="closeAdd()">Отмена</button>
+      <button class="btn btn-p" onclick="addAccs()">Добавить →</button>
     </div>
   </div>
 </div>
 
 <!-- EDIT ACCOUNT MODAL -->
-<div class="overlay" id="edit-modal" style="display:none" onclick="if(event.target===this)closeEditAcc()">
+<div class="ov" id="ea-m" style="display:none" onclick="if(event.target===this)closeEA()">
   <div class="modal">
-    <div class="modal-title">✏️ Редактировать аккаунт</div>
-    <div class="modal-sub">Данные хранятся только в твоём браузере</div>
-    <div class="cred-grid">
-      <span class="cred-label">Логин</span>
-      <input class="cred-input" id="ed-login" placeholder="username">
-      <div class="cred-actions"><button class="cred-btn" onclick="copyField('ed-login',this)">📋</button></div>
-      <span class="cred-label">Пароль</span>
-      <input class="cred-input" id="ed-pass" placeholder="password" type="text">
-      <div class="cred-actions">
-        <button class="cred-btn" onclick="toggleFieldVis('ed-pass',this)">👁</button>
-        <button class="cred-btn" onclick="copyField('ed-pass',this)">📋</button>
-      </div>
-      <span class="cred-label">Email</span>
-      <input class="cred-input" id="ed-email" placeholder="email@example.com">
-      <div class="cred-actions"><button class="cred-btn" onclick="copyField('ed-email',this)">📋</button></div>
-      <span class="cred-label">Email пароль</span>
-      <input class="cred-input" id="ed-epass" placeholder="emailpassword" type="text">
-      <div class="cred-actions">
-        <button class="cred-btn" onclick="toggleFieldVis('ed-epass',this)">👁</button>
-        <button class="cred-btn" onclick="copyField('ed-epass',this)">📋</button>
-      </div>
-      <span class="cred-label">Ключ / 2FA</span>
-      <input class="cred-input" id="ed-key" placeholder="key or 2FA seed">
-      <div class="cred-actions"><button class="cred-btn" onclick="copyField('ed-key',this)">📋</button></div>
-      <span class="cred-label">ГЕО</span>
-      <input class="cred-input" id="ed-geo" placeholder="RU">
-      <div class="cred-actions"><button class="cred-btn" onclick="copyField('ed-geo',this)">📋</button></div>
+    <div class="mtitle">✏️ Редактировать аккаунт</div>
+    <div class="msub">Данные хранятся только в твоём браузере</div>
+    <div class="cg">
+      <span class="clbl">Логин</span><input class="ci2" id="el"><div class="ca"><button class="cb" onclick="cf('el',this)">📋</button></div>
+      <span class="clbl">Пароль</span><input class="ci2" id="ep" type="text"><div class="ca"><button class="cb" onclick="tv('ep',this)">👁</button><button class="cb" onclick="cf('ep',this)">📋</button></div>
+      <span class="clbl">Email</span><input class="ci2" id="ee"><div class="ca"><button class="cb" onclick="cf('ee',this)">📋</button></div>
+      <span class="clbl">Email пароль</span><input class="ci2" id="eep" type="text"><div class="ca"><button class="cb" onclick="tv('eep',this)">👁</button><button class="cb" onclick="cf('eep',this)">📋</button></div>
+      <span class="clbl">Ключ/2FA</span><input class="ci2" id="ek2"><div class="ca"><button class="cb" onclick="cf('ek2',this)">📋</button></div>
+      <span class="clbl">ГЕО</span><input class="ci2" id="eg"><div class="ca"><button class="cb" onclick="cf('eg',this)">📋</button></div>
     </div>
-    <div class="cred-full" id="ed-full-str">
-      <span class="cred-full-text" id="ed-full-text">—</span>
-      <button class="cred-full-copy" onclick="copyCredStr(this)">📋 Копировать всё</button>
+    <div class="cful" id="efl"><span class="cfult" id="eflt">—</span><button class="cfulc" onclick="cfa(this)">📋 Копировать всё</button></div>
+    <div class="mact">
+      <button class="btn btn-g" onclick="closeEA()">Отмена</button>
+      <button class="btn btn-r" onclick="delEA()" style="margin-right:auto">🗑 Удалить</button>
+      <button class="btn btn-p" onclick="saveEA()">Сохранить</button>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeEditAcc()">Отмена</button>
-      <button class="btn btn-red" onclick="delAccFromEdit()" style="margin-right:auto">🗑 Удалить</button>
-      <button class="btn btn-purple" onclick="saveEditAcc()">Сохранить</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="ov" id="cfg-m" style="display:none" onclick="if(event.target===this)closeCfg()">
+  <div class="modal">
+    <div class="mtitle">⚙ Настройки</div>
+    <label class="fl">Anthropic API Key <span class="ab" id="ab"></span></label>
+    <div class="kw"><input type="password" id="ck" placeholder="sk-ant-api03-..."><button class="tpw" onclick="tp('ck',this)">👁</button></div>
+    <div class="sep"></div>
+    <label class="fl">OnlyMonster URL</label>
+    <input type="text" id="com" placeholder="https://onlymonster.ai/s/...">
+    <div class="sep"></div>
+    <label class="fl">URL для авто-обновлений</label>
+    <input type="text" id="cu" placeholder="https://raw.githubusercontent.com/username/repo/main/ig-tracker.html">
+    <div class="fhint">Raw-ссылка на файл в GitHub. При обновлении появится кнопка «Установить».</div>
+    <div class="mact">
+      <button class="btn btn-g" onclick="closeCfg()">Отмена</button>
+      <button class="btn btn-r" onclick="clrStats()" style="margin-right:auto">🗑 Сбросить статистику</button>
+      <button class="btn btn-p" onclick="saveCfg()">Сохранить</button>
     </div>
   </div>
 </div>
 
 <script>
-const APP_VERSION = '1.0.0';
-
-const LS = {
-  get: k => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } },
-  set: (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) { console.error(e); } },
-  del: k => { try { localStorage.removeItem(k); } catch {} }
+const APP_VERSION='1.0.0';
+const LS={
+  get:k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){console.error(e)}},
+  del:k=>{try{localStorage.removeItem(k)}catch{}}
 };
 
-let accs=[], stats={}, omUrl='https://onlymonster.ai/s/to98HABPol6', baseOffset=0, numCols=15, sortCol=null, sortDir='desc',
-    apiKey='', updUrl='', busy=false, stMap={}, editKey=null, lastAuto='';
+let accs=[],stats={},omUrl='https://onlymonster.ai/s/to98HABPol6',
+    apiKey='',updUrl='',busy=false,stMap={},editKey=null,
+    baseOffset=0,numCols=15,sortCol=null,sortDir='desc',lastAuto='',eaId=null;
 
-const dk = (d=new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-const dl = k => { const[,m,d]=k.split('-'); return `${d}.${m}`; };
-const gu = c => c.split(':')[0].trim();
-const uid = () => Math.random().toString(36).slice(2,8);
-const fmt = n => (n||0).toLocaleString('ru');
+// ── DATE HELPERS ──
+const dk=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const dl=k=>{const[,m,d]=k.split('-');return`${d}.${m}`};
+const gu=c=>c.split(':')[0].trim();
+const uid=()=>Math.random().toString(36).slice(2,8);
+const fmt=n=>(n||0).toLocaleString('ru');
 
-function log(msg, type='info') {
-  const lb = document.getElementById('log');
-  const e = document.createElement('div');
-  e.className = `log-entry log-${type}`;
-  e.textContent = `[${new Date().toLocaleTimeString('ru')}] ${msg}`;
-  const empty = lb.querySelector('.log-empty');
-  if (empty) empty.remove();
-  lb.insertBefore(e, lb.firstChild);
-  if (lb.children.length > 60) lb.removeChild(lb.lastChild);
-}
-
-function days() {
-  const d=[];
-  const now=new Date(); now.setHours(0,0,0,0);
-  // newest first: baseOffset=0 → today leftmost
-  for(let i=baseOffset; i<baseOffset+numCols; i++){
-    const dt=new Date(now.getTime()-i*864e5);
-    d.push(dk(dt));
-  }
+// days: ASCENDING left→right, today is rightmost (baseOffset=0)
+function days(){
+  const d=[],now=new Date();now.setHours(0,0,0,0);
+  for(let i=numCols-1+baseOffset;i>=baseOffset;i--)
+    d.push(dk(new Date(now.getTime()-i*864e5)));
   return d;
 }
+function navShift(n){baseOffset=Math.max(-30,Math.min(365,baseOffset+n));render()}
+function navReset(){baseOffset=0;sortCol=null;sortDir='desc';render()}
 
-function navShift(delta){
-  baseOffset=Math.max(-30,Math.min(365,baseOffset+delta));
-  render();
+// ── LOG ──
+function log(msg,t='info'){
+  const lb=document.getElementById('log');
+  const e=document.createElement('div');e.className=`le l${t}`;
+  e.textContent=`[${new Date().toLocaleTimeString('ru')}] ${msg}`;
+  const em=lb.querySelector('.le.linf[style]');if(em)em.remove();
+  lb.insertBefore(e,lb.firstChild);if(lb.children.length>60)lb.removeChild(lb.lastChild);
 }
 
-function navReset(){baseOffset=0;sortCol=null;render();}
-
-function updateNavRange(ds){
-  const el=document.getElementById('nav-range');
-  if(el&&ds.length){
-    const newest=ds[0], oldest=ds[ds.length-1];
-    el.textContent=dl(oldest)+' → '+dl(newest);
-  }
-}
-
-const totViews = day => Object.values(stats[day]?.accounts||{}).reduce((s,v)=>s+(v||0),0);
-
-function prevStat(day,f) {
-  const ds=days(), i=ds.indexOf(day);
-  for(let j=i-1;j>=0;j--) if(stats[ds[j]]) return f==='cl'?(stats[ds[j]].totalClicks||0):(stats[ds[j]].totalFans||0);
+// ── TOTALS ──
+const totV=d=>stats[d]?.totalViewsOverride??Object.values(stats[d]?.accounts||{}).reduce((s,v)=>s+(v||0),0);
+function prevSt(d,f){
+  const ds=days(),i=ds.indexOf(d);
+  for(let j=i-1;j>=0;j--)if(stats[ds[j]])return f==='cl'?(stats[ds[j]].totalClicks||0):(stats[ds[j]].totalFans||0);
   return null;
 }
-
-function delta(day,f) {
-  const cur=stats[day]; if(!cur) return null;
-  const v=f==='cl'?(cur.totalClicks||0):(cur.totalFans||0);
-  const p=prevStat(day,f); return p===null?v:v-p;
+function delta(d,f){
+  const c=stats[d];if(!c)return null;
+  const v=f==='cl'?(c.totalClicks||0):(c.totalFans||0);
+  const p=prevSt(d,f);return p===null?v:v-p;
 }
 
-function getViewClass(views, status) {
-  if (status==='❌'||status==='⚠️') return 'views-fail';
-  if (views == null) return '';
-  if (views >= 60000) return 'views-60';
-  if (views >= 3900)  return 'views-6';
-  if (views > 0)      return 'views-low';
-  return '';
+// ── VIEW CLASS (colors by view count) ──
+function vc(views,status){
+  if(status==='❌'||status==='⚠️')return'vfl';
+  if(views==null)return'';
+  if(views>=60000)return'v60';
+  if(views>=3900)return'v6';
+  if(views>0)return'vlo';
+  return'';
 }
 
-function toggleColSort(day){
-  if(sortCol===day){
-    if(sortDir==='desc') sortDir='asc';
-    else {sortCol=null; sortDir='desc';}
-  } else {
-    sortCol=day; sortDir='desc';
-  }
+// ── SORT ──
+function toggleSort(day){
+  if(sortCol===day)sortDir=sortDir==='desc'?'asc':'desc';
+  else{sortCol=day;sortDir='desc';}
   render();
 }
-
-function getSortedAccs(){
-  if(!sortCol) return accs;
-  return [...accs].sort((a,b)=>{
+function sortedAccs(){
+  if(!sortCol)return accs;
+  return[...accs].sort((a,b)=>{
     const va=stats[sortCol]?.accounts?.[a.id]??-1;
     const vb=stats[sortCol]?.accounts?.[b.id]??-1;
     return sortDir==='desc'?vb-va:va-vb;
   });
 }
 
-function render() {
-  const ds=days(), today=dk();
-  let h=`<tr><th class="acc-col">Аккаунт</th>`;
-  ds.forEach(d=>{ h+=`<th class="${d===today?'today-h':''}" style="text-align:center;min-width:70px">${dl(d)}${d===today?' ✦':''}</th>`; });
-  document.getElementById('thead').innerHTML = h+'</tr>';
+// ── RENDER ──
+function render(){
+  const ds=days(),today=dk();
+  // update nav range
+  const nr=document.getElementById('nr');
+  if(nr&&ds.length)nr.textContent=dl(ds[0])+' → '+dl(ds[ds.length-1]);
 
+  // HEADER
+  let h='<tr><th class="acc-col">Аккаунт</th>';
+  ds.forEach(d=>{
+    const isTd=(d===today),isSrt=(sortCol===d);
+    const arrow=isSrt?(sortDir==='desc'?'↓':'↑'):'↕';
+    const bg=isTd?'background:#12102A':'background:#0B0B12';
+    const lclr=isTd?'#7C5CFC':(isSrt?'#A080FF':'#666688');
+    const bbg=isSrt?'background:#1A1030;border-color:#7C5CFC;color:#C0A0FF':'background:#151520;border-color:#252535;color:#606080';
+    h+='<th style="'+bg+';text-align:center;min-width:82px;padding:0;border-right:1px solid #1E1E2C">'
+      +'<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 4px 4px">'
+      +'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:'+lclr+'">'+dl(d)+(isTd?' ✦':'')+'</span>'
+      +'<button onclick="toggleSort(\''+d+'\')" style="'+bbg+';border:1px solid;border-radius:4px;padding:1px 0;width:88%;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;line-height:1.5">'+arrow+'</button>'
+      +'</div></th>';
+  });
+  document.getElementById('thead').innerHTML=h+'</tr>';
+
+  // BODY
   let b='';
-  getSortedAccs().forEach((a,i)=>{
-    const u=gu(a.credentials), st=stMap[a.id]||'', cls=i%2?'row-even':'row-odd', bg=i%2?'#111118':'#09090F';
-    const stH = st ? `<span class="st-icon">${st}</span>` : `<span class="st-dot"></span>`;
-    const rowErrCls = stMap[a.id]==='❌'?'row-err':stMap[a.id]==='⚠️'?'row-warn':'';
-    b+=`<tr class="${cls} ${rowErrCls}"><td class="acc-td" style="background:${bg}">
+  sortedAccs().forEach((a,i)=>{
+    const u=gu(a.credentials),st=stMap[a.id]||'',cls=i%2?'r-even':'r-odd';
+    const bg=i%2?'#111118':'#09090F';
+    const stH=st?`<span class="st">${st}</span>`:'<span class="dot"></span>';
+    const tvc=vc(stats[today]?.accounts?.[a.id],stMap[a.id]);
+    b+=`<tr class="${cls}"><td class="acc-td" style="background:${bg}">
       <div class="acc-row">${stH}<span class="acc-at">@</span>
-        <button class="acc-name-btn ${getViewClass(stats[today]?.accounts?.[a.id],stMap[a.id])}" title="Нажми для редактирования" onclick="openEditAcc('${a.id}')">${u}</button>
+        <button class="acc-nm ${tvc}" onclick="openEA('${a.id}')" title="Редактировать">${u}</button>
         <span class="acc-geo">${a.geo}</span>
-        <button class="del-btn" onclick="delAcc('${a.id}')">×</button>
+        <button class="del" onclick="delAcc('${a.id}')">×</button>
       </div></td>`;
     ds.forEach(d=>{
-      const v=stats[d]?.accounts?.[a.id], ek=`${a.id}:${d}`, tc=d===today?'today-td':'';
-      if(editKey===ek){
-        b+=`<td class="${tc}"><input class="cell-input" id="ei-${ek}" value="${v??0}"
-          onblur="commitEdit('${a.id}','${d}')" onkeydown="ek(event,'${a.id}','${d}')"></td>`;
-      } else {
-        const vcls = d===today ? getViewClass(v, stMap[a.id]) : (v!=null?'':'');
-        const col = v!=null ? '' : '#33334A';
-        b+=`<td class="${tc}"><span class="cell-val ${vcls}" style="${v!=null?'':'color:#33334A'}" onclick="startEdit('${a.id}','${d}')">${v!=null?fmt(v):'—'}</span></td>`;
+      const v=stats[d]?.accounts?.[a.id],ekk=`${a.id}:${d}`,tc=d===today?'td-today':'';
+      const cls2=d===today?vc(v,stMap[a.id]):'';
+      if(editKey===ekk){
+        b+=`<td class="${tc}"><input class="ci" id="ei-${ekk}" value="${v??0}" onblur="ce('${a.id}','${d}')" onkeydown="ek2(event,'${a.id}','${d}')"></td>`;
+      }else{
+        b+=`<td class="${tc}"><span class="cv ${cls2}" style="${v==null?'color:#33334A':''}" onclick="se('${a.id}','${d}')">${v!=null?fmt(v):'—'}</span></td>`;
       }
     });
     b+='</tr>';
   });
 
-  if(!accs.length) b=`<tr class="empty-row"><td colspan="${ds.length+1}">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>`;
-  b+=`<tr class="divider-row"><td colspan="${ds.length+1}"></td></tr>`;
+  if(!accs.length)b=`<tr><td colspan="${ds.length+1}" style="padding:60px;text-align:center;color:#33334A">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>`;
+  b+=`<tr class="div-row"><td colspan="${ds.length+1}"></td></tr>`;
 
-  b+=`<tr class="total-row total-views"><td class="acc-td lbl" style="text-align:left">Всего просмотров</td>`;
-  ds.forEach(d=>{
-    const t=stats[d]?.totalViewsOverride??totViews(d),tc=d===today?'today-td':'';
-    b+=`<td class="${tc} num editable-total" onclick="startEditTotal('views','${d}')">`+
-    (editKey===`_views:${d}`?`<input class="cell-input" id="ei-_views:${d}" value="${t||0}" onblur="commitTotal('views','${d}')" onkeydown="ek(event,'_views','${d}')">`:
-    `<span class="num">${t?fmt(t):'—'}</span>`)+`</td>`;
+  // TOTAL VIEWS
+  b+='<tr class="tr-v"><td class="acc-td lbl" style="text-align:left">Всего просмотров</td>';
+  ds.forEach(d=>{const t=totV(d),tc=d===today?'td-today':'';
+    b+=`<td class="${tc} et" onclick="stEd('views','${d}')">`;
+    b+=editKey===`_views:${d}`?`<input class="ci" id="ei-_views:${d}" value="${t||0}" onblur="ctEd('views','${d}')" onkeydown="ek2(event,'_views','${d}')">`:
+      `<span class="num">${t?fmt(t):'—'}</span>`;
+    b+='</td>';
   });b+='</tr>';
 
-  b+=`<tr class="total-row total-clicks"><td class="acc-td lbl" style="text-align:left">Кликов за день</td>`;
-  ds.forEach(d=>{const v=delta(d,'cl'),tc=d===today?'today-td':'';
-    b+=`<td class="${tc} num editable-total" onclick="startEditTotal('clicks','${d}')">`+
-    (editKey===`_clicks:${d}`?`<input class="cell-input" id="ei-_clicks:${d}" value="${v??0}" onblur="commitTotal('clicks','${d}')" onkeydown="ek(event,'_clicks','${d}')">`:
-    `<span class="num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</span>`)+`</td>`;
+  // CLICKS
+  b+='<tr class="tr-cl"><td class="acc-td lbl" style="text-align:left">Кликов за день</td>';
+  ds.forEach(d=>{const v=delta(d,'cl'),tc=d===today?'td-today':'';
+    b+=`<td class="${tc} et" onclick="stEd('clicks','${d}')">`;
+    b+=editKey===`_clicks:${d}`?`<input class="ci" id="ei-_clicks:${d}" value="${v??0}" onblur="ctEd('clicks','${d}')" onkeydown="ek2(event,'_clicks','${d}')">`:
+      `<span class="num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</span>`;
+    b+='</td>';
   });b+='</tr>';
 
-  b+=`<tr class="total-row total-fans"><td class="acc-td lbl" style="text-align:left">Фанов за день</td>`;
-  ds.forEach(d=>{const v=delta(d,'fa'),tc=d===today?'today-td':'';
-    b+=`<td class="${tc} num editable-total" onclick="startEditTotal('fans','${d}')">`+
-    (editKey===`_fans:${d}`?`<input class="cell-input" id="ei-_fans:${d}" value="${v??0}" onblur="commitTotal('fans','${d}')" onkeydown="ek(event,'_fans','${d}')">`:
-    `<span class="num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</span>`)+`</td>`;});b+='</tr>';
+  // FANS
+  b+='<tr class="tr-fa"><td class="acc-td lbl" style="text-align:left">Фанов за день</td>';
+  ds.forEach(d=>{const v=delta(d,'fa'),tc=d===today?'td-today':'';
+    b+=`<td class="${tc} et" onclick="stEd('fans','${d}')">`;
+    b+=editKey===`_fans:${d}`?`<input class="ci" id="ei-_fans:${d}" value="${v??0}" onblur="ctEd('fans','${d}')" onkeydown="ek2(event,'_fans','${d}')">`:
+      `<span class="num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</span>`;
+    b+='</td>';
+  });b+='</tr>';
 
-  // PCT STATS ROWS
+  // PCT ROWS
   const pctRows=[
-    {id:'pct60',lbl:'>60к просмотров', cls:'pct-60', test:v=>v>=60000},
-    {id:'pct6', lbl:'>3.9к просмотров',cls:'pct-6',  test:v=>v>=3900&&v<60000},
-    {id:'pctlo',lbl:'<3.9к просмотров',cls:'pct-low',test:v=>v<3900&&v>0},
-    {id:'pctfl',lbl:'Отлетело',        cls:'pct-fail',test:(v,st)=>st==='❌'||st==='⚠️'},
+    {lbl:'>60к просмотров',cls:'p60',fn:(v)=>v>=60000},
+    {lbl:'>3.9к просмотров',cls:'p6', fn:(v)=>v>=3900&&v<60000},
+    {lbl:'<3.9к просмотров',cls:'plo',fn:(v)=>v<3900&&v>0},
+    {lbl:'Отлетело',         cls:'pfl',fn:(v,id,d)=>d===today&&(stMap[id]==='❌'||stMap[id]==='⚠️')},
   ];
   pctRows.forEach(row=>{
-    b+=`<tr class="stat-pct-row"><td class="acc-td lbl" style="text-align:left">${row.lbl}</td>`;
+    b+=`<tr class="tr-pct"><td class="acc-td lbl" style="text-align:left;color:#55557A">${row.lbl}</td>`;
     ds.forEach(d=>{
-      const tc=d===today?'today-td':'';
-      const dayAccs=accs.filter(a=>stats[d]?.accounts!=null);
-      if(!dayAccs.length||!stats[d]){b+=`<td class="${tc}">—</td>`;return;}
-      const total=accs.length;
-      let count;
-      if(row.id==='pctfl'){
-        count=accs.filter(a=>stMap[a.id]==='❌'||stMap[a.id]==='⚠️').length;
-        if(d!==today){count=0;}
-      } else {
-        count=accs.filter(a=>{const v=stats[d]?.accounts?.[a.id];return v!=null&&row.test(v,stMap[a.id]);}).length;
-      }
-      const pct=total?Math.round(count/total*100):0;
-      b+=`<td class="${tc}"><span class="pct-val ${row.cls}">${count} <span style="opacity:.6;font-weight:400">(${pct}%)</span></span></td>`;
+      const tc=d===today?'td-today':'';
+      if(!stats[d]||!accs.length){b+=`<td class="${tc}">—</td>`;return;}
+      const cnt=accs.filter(a=>{
+        const v=stats[d]?.accounts?.[a.id];
+        return row.fn(v,a.id,d);
+      }).length;
+      const pct=Math.round(cnt/accs.length*100);
+      b+=`<td class="${tc}"><span class="${row.cls}" style="font-weight:600">${cnt} <span style="opacity:.6;font-weight:400">(${pct}%)</span></span></td>`;
     });
     b+='</tr>';
   });
 
-  document.getElementById('tbody').innerHTML = b;
+  document.getElementById('tbody').innerHTML=b;
   if(editKey){const inp=document.getElementById(`ei-${editKey}`);if(inp){inp.focus();inp.select();}}
+  updErrBar();
 }
 
-function startEdit(aid,day){editKey=`${aid}:${day}`;render();}
-function ek(e,aid,day){if(e.key==='Enter')commitEdit(aid,day);if(e.key==='Escape'){editKey=null;render();}}
-function commitEdit(aid,day){
-  const inp=document.getElementById(`ei-${aid}:${day}`);if(!inp)return;
+// ── CELL EDIT ──
+function se(aid,d){editKey=`${aid}:${d}`;render()}
+function ek2(e,aid,d){if(e.key==='Enter')ce(aid,d);if(e.key==='Escape'){editKey=null;render()}}
+function ce(aid,d){
+  const inp=document.getElementById(`ei-${aid}:${d}`);if(!inp)return;
   const n=parseInt(inp.value)||0;
-  if(!stats[day])stats[day]={accounts:{},totalClicks:0,totalFans:0};
-  stats[day].accounts[aid]=n; editKey=null;
-  LS.set('ig-s',stats);
-  log(`✏ @${gu(accs.find(a=>a.id===aid)?.credentials||'?')} ${dl(day)}: ${fmt(n)}`,'ok');
-  render();
+  if(!stats[d])stats[d]={accounts:{},totalClicks:0,totalFans:0};
+  stats[d].accounts[aid]=n;editKey=null;
+  LS.set('ig-s',stats);log(`✏ @${gu(accs.find(a=>a.id===aid)?.credentials||'?')} ${dl(d)}: ${fmt(n)}`,'ok');render();
+}
+function stEd(f,d){editKey=`_${f}:${d}`;render()}
+function ctEd(f,d){
+  const inp=document.getElementById(`ei-_${f}:${d}`);if(!inp)return;
+  const n=parseInt(inp.value)||0;
+  if(!stats[d])stats[d]={accounts:{},totalClicks:0,totalFans:0};
+  if(f==='views'){if(n)stats[d].totalViewsOverride=n;else delete stats[d].totalViewsOverride;}
+  if(f==='clicks'){const p=prevSt(d,'cl');stats[d].totalClicks=p!=null?p+n:n;}
+  if(f==='fans'){const p=prevSt(d,'fa');stats[d].totalFans=p!=null?p+n:n;}
+  editKey=null;LS.set('ig-s',stats);log(`✏ ${f} ${dl(d)}: ${fmt(n)}`,'ok');render();
 }
 
-async function api(msg) {
+// ── ANTHROPIC API ──
+async function callAI(msg){
   const r=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -499,408 +468,227 @@ async function api(msg) {
       tools:[{type:'web_search_20250305',name:'web_search'}],
       messages:[{role:'user',content:msg}]})
   });
-  if(!r.ok){const t=await r.text();throw new Error(`API ${r.status}: ${t}`);}
+  if(!r.ok){const t=await r.text();throw new Error(`API ${r.status}: ${t}`)}
   const d=await r.json();
   return d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
 }
 
-async function fetchAllIG(users) {
-  const date=new Date().toISOString().slice(0,10);
-  const list=users.map(u=>`@${u}`).join(', ');
-  try {
-    const raw=await api(
+async function fetchAllIG(users){
+  const date=new Date().toISOString().slice(0,10),list=users.map(u=>`@${u}`).join(', ');
+  try{
+    const raw=await callAI(
       `Today is ${date}. For each of these Instagram users: ${list} — `+
       `search their reels page (instagram.com/USERNAME/reels/) and find reels uploaded in the last 24 hours. `+
       `Sum the view counts for each user separately. If no reels in 24h, views=0. `+
-      `Return ONLY a JSON object where each key is the username (without @) and value is: `+
-      `{"views":<integer>,"reels_count":<integer>,"found":<bool>}. `+
-      `Example: {"user1":{"views":15000,"reels_count":2,"found":true},"user2":{"views":0,"reels_count":0,"found":false}}`
+      `Return ONLY a JSON object: {"username":{"views":<int>,"reels_count":<int>,"found":<bool>},...}`
     );
-    const cleaned=raw.replace(/```\w*\n?|```/g,'').trim();
-    const parsed=JSON.parse(cleaned);
-    const result={};
-    users.forEach(u=>{
-      const d=parsed[u]||{};
-      result[u]={views:parseInt(d.views)||0,reels_count:parseInt(d.reels_count)||0,found:!!d.found};
-    });
-    return result;
-  }catch(e){
-    console.error('fetchAllIG error:',e);
-    const fallback={};
-    users.forEach(u=>{fallback[u]={views:0,reels_count:0,found:false};});
-    return fallback;
-  }
+    const p=JSON.parse(raw.replace(/```\w*\n?|```/g,'').trim());
+    const res={};
+    users.forEach(u=>{const d=p[u]||{};res[u]={views:parseInt(d.views)||0,reels_count:parseInt(d.reels_count)||0,found:!!d.found};});
+    return res;
+  }catch(e){console.error(e);const r={};users.forEach(u=>{r[u]={views:0,reels_count:0,found:false}});return r;}
 }
 
-async function fetchOM(url) {
-  try {
-    const raw=await api(`Fetch this page: ${url} Find "Total clicks" and "Total fans". JSON only: {"totalClicks":<int>,"totalFans":<int>,"found":<bool>}`);
+async function fetchOM(url){
+  try{
+    const raw=await callAI(`Access this page: ${url} Find "Total clicks" and "Total fans". Return ONLY JSON: {"totalClicks":<int>,"totalFans":<int>,"found":<bool>}`);
     const p=JSON.parse(raw.replace(/```\w*\n?|```/g,'').trim());
     return{totalClicks:parseInt(p.totalClicks)||0,totalFans:parseInt(p.totalFans)||0,found:!!p.found};
   }catch(e){console.error(e);return{totalClicks:0,totalFans:0,found:false};}
 }
 
-async function doFetch() {
+// ── FETCH ALL ──
+async function doFetch(){
   if(busy||!accs.length)return;
   if(!apiKey){alert('Укажи API Key в настройках (⚙)');return;}
   busy=true;
-  const btn=document.getElementById('fetch-btn');
-  btn.disabled=true;btn.textContent='⏳ Сбор...';
+  const btn=document.getElementById('fb');btn.disabled=true;btn.textContent='⏳ Сбор...';
   const today=dk();
   log(`🔄 Начало сбора за ${dl(today)}...`,'info');
   if(!stats[today])stats[today]={accounts:{},totalClicks:0,totalFans:0};
   if(!stats[today].accounts)stats[today].accounts={};
-
-  // Set all to loading
-  accs.forEach(a=>{stMap[a.id]='⏳';updSt(a.id);});
-  render();
+  accs.forEach(a=>{stMap[a.id]='⏳';});render();
 
   try{
-    const usernames=accs.map(a=>gu(a.credentials));
-    log(`📸 Запрос по ${usernames.length} аккаунтам...`,'info');
-    const results=await fetchAllIG(usernames);
+    const users=accs.map(a=>gu(a.credentials));
+    log(`📸 Запрос по ${users.length} аккаунтам...`,'info');
+    const res=await fetchAllIG(users);
     accs.forEach(a=>{
-      const u=gu(a.credentials), r=results[u]||{views:0,reels_count:0,found:false};
+      const u=gu(a.credentials),r=res[u]||{views:0,reels_count:0,found:false};
       stats[today].accounts[a.id]=r.views;
-      stMap[a.id]=r.found?'✅':'⚠️'; updSt(a.id);
+      stMap[a.id]=r.found?'✅':'⚠️';
       log(`${r.found?'✓':'⚠'} @${u}: ${r.reels_count} рилс → ${fmt(r.views)} views`,r.found?'ok':'warn');
     });
   }catch(e){
-    log(`✗ Ошибка получения данных Instagram: ${e.message}`,'err');
-    accs.forEach(a=>{stats[today].accounts[a.id]=0;stMap[a.id]='❌';updSt(a.id);});
+    accs.forEach(a=>{stats[today].accounts[a.id]=0;stMap[a.id]='❌';});
+    log(`✗ Ошибка IG: ${e.message}`,'err');
   }
   render();
 
   try{
     log('🎯 OnlyMonster...','info');
     const om=await fetchOM(omUrl);
-    stats[today].totalClicks=om.totalClicks; stats[today].totalFans=om.totalFans;
+    stats[today].totalClicks=om.totalClicks;stats[today].totalFans=om.totalFans;
     log(`${om.found?'✓':'⚠'} OM: ${fmt(om.totalClicks)} кл, ${fmt(om.totalFans)} ф`,om.found?'ok':'warn');
   }catch{log('✗ OnlyMonster: ошибка','err');}
 
-  LS.set('ig-s',stats); busy=false;
-  btn.disabled=false; btn.textContent='🔄 Обновить';
-  log('✅ Готово!','ok'); render(); updateErrSummary();
+  LS.set('ig-s',stats);busy=false;btn.disabled=false;btn.textContent='🔄 Обновить';
+  log('✅ Готово!','ok');render();
 }
 
-function updSt(id){
-  const el=document.getElementById(`st-${id}`);
-  if(el){el.textContent=stMap[id]||'';el.className='st-icon';}
+// ── ERR BAR + RETRY ──
+function updErrBar(){
+  const bar=document.getElementById('err-bar');if(!bar||!accs.length)return;
+  const errs=accs.filter(a=>stMap[a.id]==='❌'),warns=accs.filter(a=>stMap[a.id]==='⚠️'),oks=accs.filter(a=>stMap[a.id]==='✅');
+  if(!errs.length&&!warns.length){bar.style.display='none';return;}
+  bar.style.display='flex';
+  let h='';
+  if(oks.length)h+=`<span style="color:#0EC99A">✅ ${oks.length} ок</span>`;
+  if(warns.length){const nm=warns.map(a=>'@'+gu(a.credentials)).join(', ');h+=`<span style="color:#FFB020;margin-left:8px" title="${nm}">⚠️ ${warns.length}</span>`;}
+  if(errs.length){const nm=errs.map(a=>'@'+gu(a.credentials)).join(', ');h+=`<span style="color:#FF4D6A;margin-left:8px" title="${nm}">❌ ${errs.length}: ${nm}</span>`;}
+  const prob=[...errs,...warns];
+  h+=`<button class="err-badge" onclick="retryFailed()" style="margin-left:auto">🔄 Повторить (${prob.length})</button>`;
+  bar.innerHTML=h;
 }
 
-// ERROR SUMMARY + RETRY
-function updateErrSummary() {
-  const bar = document.getElementById('err-summary');
-  if (!bar) return;
-  const errs = accs.filter(a => stMap[a.id] === '❌');
-  const warns = accs.filter(a => stMap[a.id] === '⚠️');
-  const ok = accs.filter(a => stMap[a.id] === '✅');
-  if (!accs.length || (errs.length === 0 && warns.length === 0)) {
-    bar.style.display = 'none'; return;
-  }
-  bar.style.display = 'flex';
-  let html = '';
-  if (ok.length) html += `<span style="color:#0EC99A">✅ ${ok.length} ок</span>`;
-  if (warns.length) html += `<span style="color:#FFB020;margin-left:8px">⚠️ ${warns.length} не найдено</span>`;
-  if (errs.length) {
-    const names = errs.map(a => '@' + gu(a.credentials)).join(', ');
-    html += `<span style="color:#FF4D6A;margin-left:8px" title="${names}">❌ ${errs.length} ошибка${errs.length>1?'и':''}: ${names}</span>`;
-    html += `<button class="err-badge" onclick="retryFailed()" style="margin-left:auto">🔄 Повторить ❌ (${errs.length})</button>`;
-  } else if (warns.length) {
-    const names = warns.map(a => '@' + gu(a.credentials)).join(', ');
-    html += `<span style="color:#FFB020;margin-left:4px;font-size:10px" title="${names}">(${names})</span>`;
-    html += `<button class="err-badge" onclick="retryFailed()" style="margin-left:auto;background:#1A1200;color:#FFB020;border-color:#4A3800">🔄 Повторить ⚠️ (${warns.length})</button>`;
-  }
-  bar.innerHTML = html;
-}
-
-async function retryFailed() {
-  if (busy) return;
-  const failed = accs.filter(a => stMap[a.id] === '❌' || stMap[a.id] === '⚠️');
-  if (!failed.length) return;
-  busy = true;
-  const today = dk();
-  if (!stats[today]) stats[today] = {accounts:{}, totalClicks:0, totalFans:0};
-  if (!stats[today].accounts) stats[today].accounts = {};
-  log(`🔄 Повтор для ${failed.length} аккаунтов...`, 'info');
-  failed.forEach(a => { stMap[a.id] = '⏳'; updSt(a.id); });
-  updateErrSummary();
-  try {
-    const usernames = failed.map(a => gu(a.credentials));
-    const results = await fetchAllIG(usernames);
-    failed.forEach(a => {
-      const u = gu(a.credentials), r = results[u] || {views:0,reels_count:0,found:false};
-      stats[today].accounts[a.id] = r.views;
-      stMap[a.id] = r.found ? '✅' : '⚠️'; updSt(a.id);
-      log(`${r.found?'✓':'⚠'} @${u}: ${r.reels_count} рилс → ${fmt(r.views)} views`, r.found?'ok':'warn');
-    });
-  } catch(e) {
-    failed.forEach(a => { stMap[a.id] = '❌'; updSt(a.id); });
-    log(`✗ Ошибка повтора: ${e.message}`, 'err');
-  }
-  LS.set('ig-s', stats);
-  busy = false;
-  render(); updateErrSummary();
-  log('✅ Повтор завершён', 'ok');
-}
-
-// EDIT TOTAL ROWS
-function startEditTotal(field, day) {
-  editKey = `_${field}:${day}`; render();
-}
-
-function commitTotal(field, day) {
-  const inp = document.getElementById(`ei-_${field}:${day}`); if(!inp) return;
-  const n = parseInt(inp.value)||0;
-  if(!stats[day]) stats[day]={accounts:{},totalClicks:0,totalFans:0};
-  if(field==='views'){stats[day].totalViewsOverride=n||undefined; if(!n) delete stats[day].totalViewsOverride;}
-  if(field==='clicks'){
-    // store as raw total (reverse-delta: add prev)
-    const p=prevStat(day,'cl');
-    stats[day].totalClicks = p!=null ? (p+n) : n;
-  }
-  if(field==='fans'){
-    const p=prevStat(day,'fa');
-    stats[day].totalFans = p!=null ? (p+n) : n;
-  }
-  editKey=null; LS.set('ig-s',stats);
-  log(`✏ Строка ${field} ${dl(day)}: ${fmt(n)}`,'ok'); render();
-}
-
-// EDIT ACCOUNT
-let editAccId = null;
-
-function openEditAcc(id) {
-  const a = accs.find(x => x.id === id);
-  if (!a) return;
-  editAccId = id;
-  const parts = a.credentials.split(':');
-  document.getElementById('ed-login').value = parts[0] || '';
-  document.getElementById('ed-pass').value  = parts[1] || '';
-  document.getElementById('ed-email').value = parts[2] || '';
-  document.getElementById('ed-epass').value = parts[3] || '';
-  document.getElementById('ed-key').value   = parts[4] || '';
-  document.getElementById('ed-geo').value   = a.geo || '';
-  updateCredPreview();
-  // show/hide password fields with toggle
-  ['ed-pass','ed-epass'].forEach(id => {
-    const inp = document.getElementById(id);
-    inp.type = 'password';
-  });
-  document.getElementById('edit-modal').style.display = 'flex';
-  document.getElementById('ed-login').focus();
-}
-
-function closeEditAcc() {
-  document.getElementById('edit-modal').style.display = 'none';
-  editAccId = null;
-}
-
-function updateCredPreview() {
-  const vals = [
-    document.getElementById('ed-login').value,
-    document.getElementById('ed-pass').value,
-    document.getElementById('ed-email').value,
-    document.getElementById('ed-epass').value,
-    document.getElementById('ed-key').value
-  ].join(':');
-  const el = document.getElementById('ed-full-str');
-  const pEl = document.getElementById('ed-full-text');
-  if(pEl) pEl.textContent = vals || '—';
-}
-
-function copyField(id, btn) {
-  const val = document.getElementById(id)?.value || '';
-  navigator.clipboard.writeText(val).then(() => {
-    if(btn){btn.classList.add('copied');btn.textContent='✓';setTimeout(()=>{btn.classList.remove('copied');btn.textContent='📋';},1200);}
-  });
-}
-
-function toggleFieldVis(id, btn) {
-  const inp = document.getElementById(id);
-  if(!inp) return;
-  inp.type = inp.type==='password'?'text':'password';
-  btn.textContent = inp.type==='password'?'👁':'🙈';
-}
-
-function copyCredStr(btn) {
-  const t = document.getElementById('ed-full-text')?.textContent || '';
-  navigator.clipboard.writeText(t).then(() => {
-    if(btn){const orig=btn.textContent;btn.textContent='✓ Скопировано';btn.style.color='#0EC99A';setTimeout(()=>{btn.textContent=orig;btn.style.color='';},1500);}
-  });
-}
-
-['ed-login','ed-pass','ed-email','ed-epass','ed-key'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('input', updateCredPreview);
-});
-
-function saveEditAcc() {
-  if (!editAccId) return;
-  const login = document.getElementById('ed-login').value.trim();
-  if (!login) { alert('Логин не может быть пустым'); return; }
-  const creds = [
-    login,
-    document.getElementById('ed-pass').value,
-    document.getElementById('ed-email').value,
-    document.getElementById('ed-epass').value,
-    document.getElementById('ed-key').value
-  ].join(':');
-  const geo = document.getElementById('ed-geo').value || 'GEO';
-  const idx = accs.findIndex(a => a.id === editAccId);
-  if (idx >= 0) { accs[idx].credentials = creds; accs[idx].geo = geo; }
-  LS.set('ig-a', accs);
-  log(`✏ @${login} обновлён`, 'ok');
-  closeEditAcc(); render();
-}
-
-function delAccFromEdit() {
-  if (!editAccId) return;
-  const a = accs.find(x => x.id === editAccId);
-  if (!confirm(`Удалить @${gu(a?.credentials||'')}?`)) return;
-  accs = accs.filter(x => x.id !== editAccId);
-  delete stMap[editAccId];
-  LS.set('ig-a', accs);
-  log('🗑 Аккаунт удалён', 'info');
-  closeEditAcc(); render(); updateErrSummary();
-}
-
-// AUTO-UPDATE
-async function checkUpdates() {
-  if(!updUrl)return;
+async function retryFailed(){
+  if(busy)return;
+  const failed=accs.filter(a=>stMap[a.id]==='❌'||stMap[a.id]==='⚠️');if(!failed.length)return;
+  busy=true;const today=dk();
+  if(!stats[today])stats[today]={accounts:{},totalClicks:0,totalFans:0};
+  log(`🔄 Повтор для ${failed.length} акков...`,'info');
+  failed.forEach(a=>{stMap[a.id]='⏳';});render();
   try{
-    const r=await fetch(updUrl+'?_t='+Date.now());
-    if(!r.ok)return;
-    const html=await r.text();
-    const m=html.match(/APP_VERSION\s*=\s*'([\d.]+)'/);
-    if(!m)return;
-    if(isNewer(m[1],APP_VERSION)) showUpdateBanner(html,m[1]);
-  }catch(e){console.log('Update check:',e);}
+    const users=failed.map(a=>gu(a.credentials));
+    const res=await fetchAllIG(users);
+    failed.forEach(a=>{
+      const u=gu(a.credentials),r=res[u]||{views:0,reels_count:0,found:false};
+      stats[today].accounts[a.id]=r.views;stMap[a.id]=r.found?'✅':'⚠️';
+      log(`${r.found?'✓':'⚠'} @${u}: ${fmt(r.views)}`,'ok');
+    });
+  }catch(e){failed.forEach(a=>stMap[a.id]='❌');log(`✗ ${e.message}`,'err');}
+  LS.set('ig-s',stats);busy=false;render();log('✅ Повтор завершён','ok');
 }
 
-function isNewer(a,b){
-  const r=a.split('.').map(Number),c=b.split('.').map(Number);
-  for(let i=0;i<3;i++){if((r[i]||0)>(c[i]||0))return true;if((r[i]||0)<(c[i]||0))return false;}
-  return false;
-}
-
-function showUpdateBanner(html,ver){
-  if(document.getElementById('upd-banner'))return;
-  const el=document.createElement('div');
-  el.id='upd-banner'; el.className='upd-banner';
-  el.innerHTML=`<span class="upd-text">🚀 <strong>Обновление v${ver} готово!</strong></span>
-    <button class="btn btn-purple" style="font-size:11px;padding:5px 11px" id="upd-install-btn">Установить</button>
-    <button class="upd-close" onclick="this.parentElement.remove()">×</button>`;
-  document.body.appendChild(el);
-  document.getElementById('upd-install-btn').onclick = () => {
-    LS.set('ig-pending',html); location.reload();
-  };
-}
-
-function applyPending(){
-  const p=LS.get('ig-pending');
-  if(!p)return;
-  LS.del('ig-pending');
-  document.open(); document.write(p); document.close();
-}
-
-// ACCOUNTS
-function openAdd(){document.getElementById('add-modal').style.display='flex'; document.getElementById('add-txt').focus();}
-function closeAdd(){document.getElementById('add-modal').style.display='none';}
-
-document.getElementById('add-txt').addEventListener('input',function(){
-  document.getElementById('add-cnt').textContent=`${this.value.split('\n').filter(l=>l.trim()).length} строк`;
-});
-
+// ── ACCOUNTS ──
+function openAdd(){document.getElementById('add-m').style.display='flex';document.getElementById('at').focus();}
+function closeAdd(){document.getElementById('add-m').style.display='none';}
+document.getElementById('at').addEventListener('input',function(){document.getElementById('ac').textContent=`${this.value.split('\n').filter(l=>l.trim()).length} строк`;});
 function addAccs(){
-  const txt=document.getElementById('add-txt').value;
-  const geo=document.getElementById('add-geo').value||'GEO';
+  const txt=document.getElementById('at').value,geo=document.getElementById('ag').value||'GEO';
   const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
   lines.forEach(l=>accs.push({id:uid(),credentials:l,geo}));
-  LS.set('ig-a',accs);
-  log(`➕ Добавлено: ${lines.length} аккаунтов`,'ok');
-  closeAdd(); document.getElementById('add-txt').value='';
-  document.getElementById('add-cnt').textContent='0 строк';
-  render();
+  LS.set('ig-a',accs);log(`➕ Добавлено: ${lines.length}`,'ok');
+  closeAdd();document.getElementById('at').value='';document.getElementById('ac').textContent='0 строк';render();
 }
+function delAcc(id){accs=accs.filter(a=>a.id!==id);delete stMap[id];LS.set('ig-a',accs);log('🗑 Удалён','info');render();}
 
-function delAcc(id){
-  accs=accs.filter(a=>a.id!==id); delete stMap[id];
-  LS.set('ig-a',accs); log('🗑 Аккаунт удалён','info'); render();
+// ── EDIT ACCOUNT ──
+function upd(){ const v=['el','ep','ee','eep','ek2'].map(i=>document.getElementById(i)?.value||'').join(':');const el=document.getElementById('eflt');if(el)el.textContent=v||'—';}
+['el','ep','ee','eep','ek2'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',upd);});
+function openEA(id){
+  eaId=id;const a=accs.find(x=>x.id===id);if(!a)return;
+  const p=a.credentials.split(':');
+  document.getElementById('el').value=p[0]||'';
+  document.getElementById('ep').value=p[1]||'';document.getElementById('ep').type='text';
+  document.getElementById('ee').value=p[2]||'';
+  document.getElementById('eep').value=p[3]||'';document.getElementById('eep').type='text';
+  document.getElementById('ek2').value=p[4]||'';
+  document.getElementById('eg').value=a.geo||'';
+  upd();document.getElementById('ea-m').style.display='flex';document.getElementById('el').focus();
 }
+function closeEA(){document.getElementById('ea-m').style.display='none';eaId=null;}
+function saveEA(){
+  const login=document.getElementById('el').value.trim();if(!login){alert('Логин пустой');return;}
+  const creds=[login,'ep','ee','eep','ek2'].map((id,i)=>i===0?login:document.getElementById(id).value).join(':');
+  const geo=document.getElementById('eg').value||'GEO';
+  const idx=accs.findIndex(a=>a.id===eaId);
+  if(idx>=0){accs[idx].credentials=creds;accs[idx].geo=geo;}
+  LS.set('ig-a',accs);log(`✏ @${login} обновлён`,'ok');closeEA();render();
+}
+function delEA(){
+  const a=accs.find(x=>x.id===eaId);if(!confirm(`Удалить @${gu(a?.credentials||'')}?`))return;
+  accs=accs.filter(x=>x.id!==eaId);delete stMap[eaId];LS.set('ig-a',accs);log('🗑 Удалён','info');closeEA();render();
+}
+function cf(id,btn){navigator.clipboard.writeText(document.getElementById(id)?.value||'').then(()=>{btn.classList.add('cp');btn.textContent='✓';setTimeout(()=>{btn.classList.remove('cp');btn.textContent='📋'},1200)});}
+function tv(id,btn){const inp=document.getElementById(id);inp.type=inp.type==='password'?'text':'password';btn.textContent=inp.type==='password'?'👁':'🙈';}
+function cfa(btn){const t=document.getElementById('eflt')?.textContent||'';navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='✓ Скопировано';btn.style.color='#0EC99A';setTimeout(()=>{btn.textContent=o;btn.style.color=''},1500)});}
 
-// SETTINGS
+// ── SETTINGS ──
 function openCfg(){
-  document.getElementById('cfg-key').value=apiKey;
-  document.getElementById('cfg-om').value=omUrl;
-  document.getElementById('cfg-upd').value=updUrl;
-  const b=document.getElementById('api-badge');
-  if(apiKey){b.className='api-badge api-ok';b.textContent='✓ есть';}
-  else{b.className='api-badge api-miss';b.textContent='✗ нет';}
-  document.getElementById('cfg-modal').style.display='flex';
+  document.getElementById('ck').value=apiKey;
+  document.getElementById('com').value=omUrl;
+  document.getElementById('cu').value=updUrl;
+  const b=document.getElementById('ab');
+  if(apiKey){b.className='ab ab-ok';b.textContent='✓ есть';}else{b.className='ab ab-no';b.textContent='✗ нет';}
+  document.getElementById('cfg-m').style.display='flex';
 }
-function closeCfg(){document.getElementById('cfg-modal').style.display='none';}
-
+function closeCfg(){document.getElementById('cfg-m').style.display='none';}
 function saveCfg(){
-  const k=document.getElementById('cfg-key').value.trim();
-  if(k){apiKey=k;LS.set('ig-k',k);}
-  omUrl=document.getElementById('cfg-om').value.trim()||omUrl;
-  updUrl=document.getElementById('cfg-upd').value.trim();
-  LS.set('ig-c',{om:omUrl,upd:updUrl});
-  closeCfg(); log('⚙ Настройки сохранены','ok');
+  const k=document.getElementById('ck').value.trim();if(k){apiKey=k;LS.set('ig-k',k);}
+  omUrl=document.getElementById('com').value.trim()||omUrl;
+  updUrl=document.getElementById('cu').value.trim();
+  LS.set('ig-c',{om:omUrl,upd:updUrl});closeCfg();log('⚙ Настройки сохранены','ok');
 }
+function clrStats(){if(!confirm('Удалить всю статистику?'))return;stats={};LS.del('ig-s');closeCfg();log('🗑 Статистика очищена','warn');render();}
 
-function clearStats(){
-  if(!confirm('Удалить всю статистику? Аккаунты и ключ останутся.'))return;
-  stats={}; LS.del('ig-s'); closeCfg();
-  log('🗑 Статистика очищена','warn'); render();
-}
+// ── SETUP ──
+function vs(){document.getElementById('sb').disabled=!document.getElementById('sk').value.trim().startsWith('sk-ant-');}
+function doSetup(){const k=document.getElementById('sk').value.trim();if(!k)return;apiKey=k;LS.set('ig-k',k);showMain();}
+function tp(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁':'🙈';}
 
-// SETUP
-function validateSetup(){
-  document.getElementById('setup-btn').disabled=!document.getElementById('setup-key').value.trim().startsWith('sk-ant-');
+// ── AUTO-UPDATE ──
+async function checkUpd(){
+  if(!updUrl)return;
+  try{
+    const r=await fetch(updUrl+'?_t='+Date.now());if(!r.ok)return;
+    const html=await r.text();
+    const m=html.match(/APP_VERSION='([\d.]+)'/);if(!m)return;
+    if(isNewer(m[1],APP_VERSION))showUpdBanner(html,m[1]);
+  }catch(e){console.log('upd check:',e);}
 }
-function doSetup(){
-  const k=document.getElementById('setup-key').value.trim();
-  if(!k)return; apiKey=k; LS.set('ig-k',k); showMain();
+function isNewer(a,b){const r=a.split('.').map(Number),c=b.split('.').map(Number);for(let i=0;i<3;i++){if((r[i]||0)>(c[i]||0))return true;if((r[i]||0)<(c[i]||0))return false;}return false;}
+function showUpdBanner(html,ver){
+  if(document.getElementById('upd-b'))return;
+  const el=document.createElement('div');el.id='upd-b';el.className='upd';
+  el.innerHTML=`<span class="utxt">🚀 <strong>Обновление v${ver}!</strong></span>
+    <button class="btn btn-p" style="font-size:11px;padding:5px 11px" id="upd-install">Установить</button>
+    <button class="ucls" onclick="this.parentElement.remove()">×</button>`;
+  document.body.appendChild(el);
+  document.getElementById('upd-install').onclick=()=>{LS.set('ig-pending',html);location.reload();};
 }
+function applyPending(){const p=LS.get('ig-pending');if(!p)return;LS.del('ig-pending');document.open();document.write(p);document.close();}
 
-function togglePw(id,btn){
-  const inp=document.getElementById(id);
-  inp.type=inp.type==='password'?'text':'password';
-  btn.textContent=inp.type==='password'?'👁':'🙈';
-}
-
+// ── SHOW MAIN ──
 function showMain(){
   document.getElementById('setup').style.display='none';
   document.getElementById('hdr').style.display='flex';
-  document.getElementById('nav-bar').style.display='flex';
+  document.getElementById('nav').style.display='flex';
   document.getElementById('bdy').style.display='flex';
   document.getElementById('ver').textContent=`v${APP_VERSION}`;
   render();
-  if(accs.length) log(`Загружено: ${accs.length} аккаунтов, ${Object.keys(stats).length} дней`,'ok');
+  if(accs.length)log(`Загружено: ${accs.length} акков, ${Object.keys(stats).length} дней`,'ok');
   else log('Добавь аккаунты чтобы начать','info');
-  setTimeout(checkUpdates,3000);
+  setTimeout(checkUpd,3000);
 }
 
-// COUNTDOWN + AUTO-FETCH
+// ── COUNTDOWN ──
 setInterval(()=>{
-  const now=new Date(),mid=new Date(now); mid.setHours(24,0,0,0);
-  const diff=mid-now, h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
+  const now=new Date(),mid=new Date(now);mid.setHours(24,0,0,0);
+  const diff=mid-now,h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
   const el=document.getElementById('cd');
-  if(el) el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if(el)el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   const today=dk();
   if(h===0&&m===4&&s===59&&lastAuto!==today&&!busy){lastAuto=today;doFetch();}
 },1000);
+setInterval(checkUpd,30*60*1000);
 
-setInterval(checkUpdates, 30*60*1000);
-
-// INIT
+// ── INIT ──
 (function(){
   applyPending();
-  const k=LS.get('ig-k'), a=LS.get('ig-a'), s=LS.get('ig-s'), c=LS.get('ig-c');
-  if(a) accs=a; if(s) stats=s;
-  if(c?.om) omUrl=c.om; if(c?.upd) updUrl=c.upd;
+  const k=LS.get('ig-k'),a=LS.get('ig-a'),s=LS.get('ig-s'),c=LS.get('ig-c');
+  if(a)accs=a;if(s)stats=s;
+  if(c?.om)omUrl=c.om;if(c?.upd)updUrl=c.upd;
   if(k){apiKey=k;showMain();}
   else document.getElementById('setup').style.display='flex';
 })();

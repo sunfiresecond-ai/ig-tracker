@@ -94,6 +94,14 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
 .upd-text{font-size:12px;color:#C0A0FF;}
 .upd-text strong{color:#E0D0FF;font-weight:600;}
 .upd-close{background:none;border:none;color:#555577;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
+.acc-name-btn{font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:115px;color:#E0E0EE;background:none;border:none;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-align:left;}
+.acc-name-btn:hover{color:#7C5CFC;text-decoration:underline;}
+.cred-grid{display:grid;grid-template-columns:90px 1fr;gap:6px 10px;align-items:center;margin-top:4px;}
+.cred-label{font-size:11px;color:#666688;text-align:right;}
+.cred-input{background:#09090F;border:1px solid #1E1E2C;border-radius:5px;padding:6px 9px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;width:100%;transition:border-color .15s;}
+.cred-input:focus{border-color:#7C5CFC;}
+.cred-full{font-size:10px;color:#33334A;font-family:monospace;background:#0D0D16;border:1px solid #1A1A2A;border-radius:5px;padding:7px 9px;margin-top:10px;word-break:break-all;line-height:1.6;cursor:pointer;}
+.cred-full:hover{border-color:#2A2A3A;color:#44445A;}
 .row-err td.acc-td{border-left:2px solid #FF4D6A!important;}
 .row-warn td.acc-td{border-left:2px solid #FFB020!important;}
 .err-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:#2A0A0E;color:#FF4D6A;border:1px solid #5A1520;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600;transition:background .15s;}
@@ -197,6 +205,34 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
   </div>
 </div>
 
+<!-- EDIT ACCOUNT MODAL -->
+<div class="overlay" id="edit-modal" style="display:none" onclick="if(event.target===this)closeEditAcc()">
+  <div class="modal">
+    <div class="modal-title">✏️ Редактировать аккаунт</div>
+    <div class="modal-sub">Данные хранятся только в твоём браузере</div>
+    <div class="cred-grid">
+      <span class="cred-label">Логин</span>
+      <input class="cred-input" id="ed-login" placeholder="username">
+      <span class="cred-label">Пароль</span>
+      <input class="cred-input" id="ed-pass" placeholder="password" type="password">
+      <span class="cred-label">Email</span>
+      <input class="cred-input" id="ed-email" placeholder="email@example.com">
+      <span class="cred-label">Email пароль</span>
+      <input class="cred-input" id="ed-epass" placeholder="emailpassword" type="password">
+      <span class="cred-label">Ключ / 2FA</span>
+      <input class="cred-input" id="ed-key" placeholder="key or 2FA seed">
+      <span class="cred-label">ГЕО</span>
+      <input class="cred-input" id="ed-geo" placeholder="RU">
+    </div>
+    <div class="cred-full" id="ed-full-str" title="Нажми чтобы скопировать" onclick="copyCredStr()"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditAcc()">Отмена</button>
+      <button class="btn btn-red" onclick="delAccFromEdit()" style="margin-right:auto">🗑 Удалить</button>
+      <button class="btn btn-purple" onclick="saveEditAcc()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const APP_VERSION = '1.0.0';
 
@@ -260,7 +296,7 @@ function render() {
     const rowErrCls = stMap[a.id]==='❌'?'row-err':stMap[a.id]==='⚠️'?'row-warn':'';
     b+=`<tr class="${cls} ${rowErrCls}"><td class="acc-td" style="background:${bg}">
       <div class="acc-row">${stH}<span class="acc-at">@</span>
-        <span class="acc-name" title="${u}">${u}</span>
+        <button class="acc-name-btn" title="Нажми для редактирования" onclick="openEditAcc('${a.id}')">${u}</button>
         <span class="acc-geo">${a.geo}</span>
         <button class="del-btn" onclick="delAcc('${a.id}')">×</button>
       </div></td>`;
@@ -457,6 +493,91 @@ async function retryFailed() {
   busy = false;
   render(); updateErrSummary();
   log('✅ Повтор завершён', 'ok');
+}
+
+// EDIT ACCOUNT
+let editAccId = null;
+
+function openEditAcc(id) {
+  const a = accs.find(x => x.id === id);
+  if (!a) return;
+  editAccId = id;
+  const parts = a.credentials.split(':');
+  document.getElementById('ed-login').value = parts[0] || '';
+  document.getElementById('ed-pass').value  = parts[1] || '';
+  document.getElementById('ed-email').value = parts[2] || '';
+  document.getElementById('ed-epass').value = parts[3] || '';
+  document.getElementById('ed-key').value   = parts[4] || '';
+  document.getElementById('ed-geo').value   = a.geo || '';
+  updateCredPreview();
+  // show/hide password fields with toggle
+  ['ed-pass','ed-epass'].forEach(id => {
+    const inp = document.getElementById(id);
+    inp.type = 'password';
+  });
+  document.getElementById('edit-modal').style.display = 'flex';
+  document.getElementById('ed-login').focus();
+}
+
+function closeEditAcc() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editAccId = null;
+}
+
+function updateCredPreview() {
+  const vals = [
+    document.getElementById('ed-login').value,
+    document.getElementById('ed-pass').value,
+    document.getElementById('ed-email').value,
+    document.getElementById('ed-epass').value,
+    document.getElementById('ed-key').value
+  ].join(':');
+  const el = document.getElementById('ed-full-str');
+  el.textContent = vals || '—';
+}
+
+function copyCredStr() {
+  const t = document.getElementById('ed-full-str').textContent;
+  navigator.clipboard.writeText(t).then(() => {
+    const el = document.getElementById('ed-full-str');
+    el.style.color = '#0EC99A';
+    setTimeout(() => { el.style.color = ''; }, 1000);
+  });
+}
+
+['ed-login','ed-pass','ed-email','ed-epass','ed-key'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateCredPreview);
+});
+
+function saveEditAcc() {
+  if (!editAccId) return;
+  const login = document.getElementById('ed-login').value.trim();
+  if (!login) { alert('Логин не может быть пустым'); return; }
+  const creds = [
+    login,
+    document.getElementById('ed-pass').value,
+    document.getElementById('ed-email').value,
+    document.getElementById('ed-epass').value,
+    document.getElementById('ed-key').value
+  ].join(':');
+  const geo = document.getElementById('ed-geo').value || 'GEO';
+  const idx = accs.findIndex(a => a.id === editAccId);
+  if (idx >= 0) { accs[idx].credentials = creds; accs[idx].geo = geo; }
+  LS.set('ig-a', accs);
+  log(`✏ @${login} обновлён`, 'ok');
+  closeEditAcc(); render();
+}
+
+function delAccFromEdit() {
+  if (!editAccId) return;
+  const a = accs.find(x => x.id === editAccId);
+  if (!confirm(`Удалить @${gu(a?.credentials||'')}?`)) return;
+  accs = accs.filter(x => x.id !== editAccId);
+  delete stMap[editAccId];
+  LS.set('ig-a', accs);
+  log('🗑 Аккаунт удалён', 'info');
+  closeEditAcc(); render(); updateErrSummary();
 }
 
 // AUTO-UPDATE

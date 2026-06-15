@@ -102,10 +102,10 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
 .th-sortable:hover{color:#A0A0FF!important;background:#14122A!important;}
 .th-sorted{color:#7C5CFC!important;background:#12102A!important;}
 .sort-arrow{font-size:9px;margin-left:3px;opacity:.7;}
-.th-inner{display:flex;flex-direction:column;align-items:center;gap:2px;padding:1px 0;}
-.col-sort-btn{background:none;border:1px solid transparent;color:#33334A;border-radius:3px;padding:0 4px;font-size:10px;cursor:pointer;line-height:1.4;transition:all .12s;display:block;width:100%;}
-.col-sort-btn:hover{border-color:#333348;color:#7C5CFC;}
-.col-sort-btn.active-sort{color:#7C5CFC;border-color:#3A2A6A;background:#1A1030;}
+.th-inner{display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;}
+.col-sort-btn{background:#151520;border:1px solid #252535;color:#55557A;border-radius:4px;padding:1px 8px;font-size:11px;cursor:pointer;line-height:1.5;display:block;width:calc(100% - 4px);text-align:center;transition:all .12s;font-weight:700;}
+.col-sort-btn:hover{border-color:#7C5CFC;color:#A080FF;background:#1A1030;}
+.col-sort-btn.active-sort{color:#E0D0FF;border-color:#7C5CFC;background:#1A1030;}
 .cred-grid{display:grid;grid-template-columns:80px 1fr auto;gap:6px 8px;align-items:center;margin-top:4px;}
 .cred-label{font-size:11px;color:#666688;text-align:right;}
 .cred-input{background:#09090F;border:1px solid #1E1E2C;border-radius:5px;padding:6px 9px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;width:100%;transition:border-color .15s;}
@@ -160,12 +160,12 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
 </div>
 
 <div class="nav-bar" id="nav-bar" style="display:none">
-  <button class="nav-btn" onclick="navShift(30)" title="−1 месяц">◀◀</button>
-  <button class="nav-btn" onclick="navShift(7)" title="−1 неделя">◀</button>
+  <button class="nav-btn" onclick="navShift(30)" title="Ещё старее −30 дней">▶▶</button>
+  <button class="nav-btn" onclick="navShift(7)"  title="Назад −7 дней">▶</button>
   <span class="nav-range" id="nav-range">—</span>
-  <button class="nav-btn" onclick="navShift(-7)" title="+1 неделя">▶</button>
-  <button class="nav-btn" onclick="navShift(-30)" title="+1 месяц">▶▶</button>
-  <button class="nav-btn" onclick="navReset()" title="Вернуться к вчера" style="font-size:10px;padding:4px 9px">Сегодня</button>
+  <button class="nav-btn" onclick="navShift(-7)"  title="Вперёд +7 дней">◀</button>
+  <button class="nav-btn" onclick="navShift(-30)" title="Вперёд +30 дней">◀◀</button>
+  <button class="nav-btn" onclick="navReset()" style="font-size:10px;padding:4px 9px">Сегодня</button>
 </div>
 <div class="body" id="bdy" style="display:none">
   <div class="table-wrap">
@@ -327,8 +327,8 @@ function log(msg, type='info') {
 function days() {
   const d=[];
   const now=new Date(); now.setHours(0,0,0,0);
-  const end=baseOffset, start=baseOffset+numCols-1;
-  for(let i=start;i>=end;i--){
+  // newest first: baseOffset=0 → today leftmost
+  for(let i=baseOffset; i<baseOffset+numCols; i++){
     const dt=new Date(now.getTime()-i*864e5);
     d.push(dk(dt));
   }
@@ -344,7 +344,10 @@ function navReset(){baseOffset=0;sortCol=null;render();}
 
 function updateNavRange(ds){
   const el=document.getElementById('nav-range');
-  if(el&&ds.length) el.textContent=`${dl(ds[0])} — ${dl(ds[ds.length-1])}`;
+  if(el&&ds.length){
+    const newest=ds[0], oldest=ds[ds.length-1];
+    el.textContent=dl(oldest)+' → '+dl(newest);
+  }
 }
 
 const totViews = day => Object.values(stats[day]?.accounts||{}).reduce((s,v)=>s+(v||0),0);

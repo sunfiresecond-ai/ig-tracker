@@ -280,22 +280,20 @@ textarea:focus,input:focus{border-color:#7C5CFC}
       <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="triggerImgFile()">📁 Файл</button>
       <button class="btn btn-r" style="font-size:11px;padding:4px 10px" onclick="delImg()">🗑</button>
       <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="closeImg()">✕</button>
-      <input type="file" id="img-file-input" accept="image/*" style="display:none" onchange="onImgFile(this)">
+      <input type="file" id="img-file-input" accept="image/*" style="display:none">
     </div>
     <div class="img-modal-body" id="img-body">
-      <div>
-        <div class="paste-zone" id="paste-zone" onclick="triggerImgFile()"
-          ondragover="event.preventDefault();this.classList.add('drag')"
-          ondragleave="this.classList.remove('drag')"
-          ondrop="event.preventDefault();this.classList.remove('drag');handleDrop(event)">
+      <div id="img-empty" style="text-align:center">
+        <div class="paste-zone" id="paste-zone">
           <strong>Нет изображения</strong>
-          Нажми чтобы выбрать файл<br>или перетащи сюда<br>
-          <span style="font-size:11px;margin-top:6px;display:block;color:#555">Ctrl+V чтобы вставить из буфера</span>
+          Нажми чтобы выбрать файл, перетащи сюда<br>
+          <span style="font-size:11px;margin-top:6px;display:block;color:#555">или Ctrl+V из буфера</span>
         </div>
       </div>
+      <img id="img-preview" src="" style="display:none;max-width:80vw;max-height:70vh;border-radius:8px;object-fit:contain">
     </div>
     <div class="img-modal-footer" id="img-footer" style="display:none">
-      <span style="font-size:11px;color:#55557A" id="img-info"></span>
+      <span style="font-size:11px;color:#55557A">Ctrl+V — вставить новое</span>
       <div style="flex:1"></div>
       <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="triggerImgFile()">🔄 Заменить</button>
     </div>
@@ -750,28 +748,21 @@ function openImg(id,name){
 function closeImg(){document.getElementById('img-m').style.display='none';curImgId=null;}
 function refreshImgModal(){
   const th=thumbs[curImgId];
-  const body=document.getElementById('img-body');
+  const empty=document.getElementById('img-empty');
+  const preview=document.getElementById('img-preview');
   const footer=document.getElementById('img-footer');
-  const zone=document.getElementById('paste-zone');
   if(th){
-    body.innerHTML='<img src="'+th+'" style="max-width:80vw;max-height:70vh;border-radius:8px;object-fit:contain;display:block">';
+    empty.style.display='none';
+    preview.src=th;preview.style.display='block';
     footer.style.display='flex';
-    const info=document.getElementById('img-info');
-    if(info)info.textContent='Нажми «Заменить» чтобы обновить';
   }else{
-    body.innerHTML='<div><div class="paste-zone" id="paste-zone" onclick="triggerImgFile()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');handleDrop(event)"><strong>Нет изображения</strong>Нажми чтобы выбрать файл<br>или перетащи сюда<br><span style="font-size:11px;margin-top:6px;display:block;color:#555">Ctrl+V чтобы вставить из буфера</span></div></div>';
+    empty.style.display='block';
+    preview.src='';preview.style.display='none';
     footer.style.display='none';
   }
 }
 function triggerImgFile(){document.getElementById('img-file-input').click();}
-function onImgFile(inp){
-  if(!inp.files[0])return;
-  compressImg(inp.files[0],800,img=>{saveThumb(img);});
-  inp.value='';
-}
-function handleDrop(e){
-  const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))compressImg(f,800,saveThumb);
-}
+
 function compressImg(file,maxPx,cb){
   const url=URL.createObjectURL(file);
   const img=new Image();
@@ -803,6 +794,21 @@ document.addEventListener('paste',e=>{
   const item=Array.from(e.clipboardData.items).find(i=>i.type.startsWith('image/'));
   if(item)compressImg(item.getAsFile(),800,saveThumb);
 });
+// file input change
+document.getElementById('img-file-input').addEventListener('change',function(){
+  if(this.files[0])compressImg(this.files[0],800,saveThumb);
+  this.value='';
+});
+// paste-zone click & drag
+const pz=document.getElementById('paste-zone');
+if(pz){
+  pz.addEventListener('click',triggerImgFile);
+  pz.addEventListener('dragover',e=>{e.preventDefault();pz.classList.add('drag');});
+  pz.addEventListener('dragleave',()=>pz.classList.remove('drag'));
+  pz.addEventListener('drop',e=>{e.preventDefault();pz.classList.remove('drag');
+    const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))compressImg(f,800,saveThumb);
+  });
+}
 
 // ── SHOW MAIN ──
 function showMain(){

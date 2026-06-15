@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IG Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:Inter,system-ui,sans-serif;background:#09090F;color:#E0E0EE;display:flex;flex-direction:column;font-size:13px;height:100vh;overflow:hidden;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:#111118;}
+::-webkit-scrollbar-thumb{background:#2A2A3A;border-radius:4px;}
+.header{background:#111118;border-bottom:1px solid #1E1E2C;padding:9px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.header-title{font-weight:700;font-size:14px;letter-spacing:-.02em;}
+.spacer{flex:1;}
+.countdown{font-family:monospace;font-size:11px;color:#666688;}
+.cd-val{color:#7C5CFC;font-weight:600;}
+.btn{border:none;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:opacity .15s,background .15s;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-ghost{background:#1A1A26;color:#A0A0C0;}
+.btn-ghost:hover:not(:disabled){background:#22222E;}
+.btn-green{background:#0EC99A;color:#000;}
+.btn-green:hover:not(:disabled){background:#0DB88C;}
+.btn-purple{background:#7C5CFC;color:#fff;}
+.btn-purple:hover:not(:disabled){background:#6A4CE0;}
+.btn-red{background:#3A1018;color:#FF4D6A;}
+.btn-red:hover{background:#4A1520;}
+.body{display:flex;flex:1;overflow:hidden;min-height:0;}
+.table-wrap{flex:1;overflow:auto;}
+table{border-collapse:collapse;min-width:100%;}
+thead th{padding:7px 9px;border-right:1px solid #1E1E2C;font-size:10px;color:#666688;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:#0B0B12;position:sticky;top:0;z-index:10;white-space:nowrap;}
+thead th.today-h{background:#12102A;color:#7C5CFC;}
+th.acc-col{text-align:left;min-width:185px;position:sticky;left:0;z-index:20;background:#0B0B12;}
+td{padding:5px 9px;border-right:1px solid #1E1E2C;font-size:12px;white-space:nowrap;text-align:right;color:#C0C0D8;}
+td.acc-td{text-align:left;position:sticky;left:0;z-index:5;min-width:185px;}
+td.today-td{background:#12102A!important;}
+tr.row-even td{background:#111118;}
+tr.row-odd td{background:transparent;}
+.acc-row{display:flex;align-items:center;gap:5px;overflow:hidden;}
+.st-icon{font-size:11px;width:16px;text-align:center;flex-shrink:0;display:inline-block;}
+.st-dot{width:6px;height:6px;border-radius:50%;background:#2A2A3A;flex-shrink:0;display:inline-block;vertical-align:middle;}
+.acc-at{font-family:monospace;font-size:10px;color:#44445A;flex-shrink:0;}
+.acc-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:115px;color:#E0E0EE;}
+.acc-geo{font-size:10px;color:#44445A;margin-left:auto;flex-shrink:0;padding-right:2px;}
+.del-btn{background:none;border:none;color:#2A2A3A;cursor:pointer;font-size:15px;line-height:1;padding:0 2px;flex-shrink:0;transition:color .1s;}
+.del-btn:hover{color:#FF4D6A;}
+.cell-val{cursor:pointer;transition:color .1s;}
+.cell-val:hover{color:#7C5CFC;}
+.cell-input{width:70px;background:#1A1A28;color:#E0E0EE;border:1px solid #7C5CFC;border-radius:3px;padding:2px 5px;font-size:11px;text-align:right;outline:none;font-family:inherit;}
+.divider-row td{height:3px;background:#222233;padding:0;}
+.total-row td{font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;}
+.total-views td{background:#100D22!important;} .total-views .lbl{color:#7C5CFC;} .total-views .num{color:#7C5CFC;}
+.total-clicks td{background:#081512!important;} .total-clicks .lbl{color:#0EC99A;} .total-clicks .num{color:#0EC99A;}
+.total-fans td{background:#14080F!important;} .total-fans .lbl{color:#FF5FA0;} .total-fans .num{color:#FF5FA0;}
+.empty-row td{padding:50px;text-align:center;color:#33334A;font-size:13px;}
+.log-panel{width:210px;border-left:1px solid #1E1E2C;background:#111118;display:flex;flex-direction:column;flex-shrink:0;}
+.log-header{padding:7px 12px;border-bottom:1px solid #1E1E2C;font-size:10px;color:#55557A;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.log-body{flex:1;overflow-y:auto;padding:5px 8px;}
+.log-empty{color:#33334A;font-size:11px;text-align:center;margin-top:18px;}
+.log-entry{font-family:monospace;font-size:10px;padding:1.5px 0;line-height:1.5;word-break:break-word;}
+.log-ok{color:#0EC99A;} .log-err{color:#FF4D6A;} .log-warn{color:#FFB020;} .log-info{color:#55557A;}
+.log-footer{padding:6px 10px;border-top:1px solid #1E1E2C;font-size:9.5px;color:#33334A;line-height:1.5;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal{background:#111118;border:1px solid #2A2A3A;border-radius:12px;padding:22px;width:500px;max-width:96vw;}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:6px;color:#E0E0EE;}
+.modal-sub{font-size:11px;color:#666688;margin-bottom:10px;line-height:1.6;}
+.modal-sub code{color:#7C5CFC;font-family:monospace;background:#1A1A2A;padding:1px 5px;border-radius:3px;}
+.field-label{font-size:11px;color:#666688;display:block;margin-bottom:4px;margin-top:13px;}
+.field-hint{font-size:10px;color:#44445A;margin-top:4px;line-height:1.5;}
+textarea,input[type=text],input[type=password]{width:100%;background:#09090F;border:1px solid #1E1E2C;border-radius:6px;padding:8px 10px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;resize:vertical;transition:border-color .15s;}
+textarea:focus,input:focus{border-color:#7C5CFC;}
+.modal-row{display:flex;gap:8px;margin-top:9px;align-items:center;}
+.modal-label{font-size:12px;color:#666688;flex-shrink:0;}
+.geo-input{width:80px!important;resize:none;height:32px;padding:4px 8px;font-family:inherit!important;}
+.modal-count{margin-left:auto;font-size:11px;color:#555577;}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+.api-key-wrap{position:relative;}
+.api-key-wrap input{padding-right:38px;}
+.toggle-pw{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#555577;cursor:pointer;font-size:14px;padding:0;}
+.sep{height:1px;background:#1E1E2C;margin:14px 0;}
+.api-badge{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+.api-ok{background:#0A2018;color:#0EC99A;} .api-miss{background:#200A0A;color:#FF4D6A;}
+.info-box{background:#0F1A28;border:1px solid #1A3050;border-radius:6px;padding:10px 12px;font-size:11px;color:#6090C0;line-height:1.6;margin-top:8px;}
+.info-box strong{color:#80B0E0;}
+.setup-screen{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;}
+.setup-card{background:#111118;border:1px solid #2A2A3A;border-radius:14px;padding:28px;width:480px;max-width:96vw;}
+.setup-icon{font-size:32px;margin-bottom:8px;display:block;}
+.setup-title{font-size:18px;font-weight:700;margin-bottom:8px;}
+.setup-desc{font-size:12px;color:#666688;line-height:1.7;margin-bottom:16px;}
+.setup-desc a{color:#7C5CFC;text-decoration:none;}
+.upd-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1A1430;border:1px solid #7C5CFC;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px;z-index:400;animation:slideUp .3s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.upd-text{font-size:12px;color:#C0A0FF;}
+.upd-text strong{color:#E0D0FF;font-weight:600;}
+.upd-close{background:none;border:none;color:#555577;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
+</style>
+</head>
+<body>
+
+<div class="header" id="hdr" style="display:none">
+  <span class="header-title">📊 IG Tracker</span>
+  <span id="ver" style="font-size:10px;color:#33334A;font-family:monospace;padding:2px 6px;background:#0D0D16;border-radius:4px;border:1px solid #1E1E2C"></span>
+  <div class="spacer"></div>
+  <span class="countdown">До полуночи: <span class="cd-val" id="cd">—</span></span>
+  <button class="btn btn-ghost" onclick="openCfg()">⚙ Настройки</button>
+  <button class="btn btn-ghost" onclick="openAdd()">+ Аккаунты</button>
+  <button class="btn btn-green" id="fetch-btn" onclick="doFetch()">🔄 Обновить</button>
+</div>
+
+<div class="body" id="bdy" style="display:none">
+  <div class="table-wrap">
+    <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+  </div>
+  <div class="log-panel">
+    <div class="log-header">Лог</div>
+    <div class="log-body" id="log"><div class="log-empty">Ожидание...</div></div>
+    <div class="log-footer">Авто-обновление в 23:55<br>Клик на ячейку = ручной ввод</div>
+  </div>
+</div>
+
+<div class="setup-screen" id="setup" style="display:none">
+  <div class="setup-card">
+    <span class="setup-icon">📊</span>
+    <div class="setup-title">IG Tracker — первый запуск</div>
+    <div class="setup-desc">
+      Для сбора данных приложение использует Anthropic API.<br>
+      Получи ключ на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key
+    </div>
+    <label class="field-label">Anthropic API Key</label>
+    <div class="api-key-wrap">
+      <input type="password" id="setup-key" placeholder="sk-ant-api03-..." oninput="validateSetup()">
+      <button class="toggle-pw" onclick="togglePw('setup-key',this)">👁</button>
+    </div>
+    <div class="info-box" style="margin-top:12px">
+      <strong>Ключ хранится только в этом браузере</strong> и передаётся только на api.anthropic.com при запросах данных.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-purple" id="setup-btn" onclick="doSetup()" disabled>Начать →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD -->
+<div class="overlay" id="add-modal" style="display:none" onclick="if(event.target===this)closeAdd()">
+  <div class="modal">
+    <div class="modal-title">Добавить аккаунты</div>
+    <div class="modal-sub">Формат: <code>login:pass:email:emailpass:key</code> — по одному на строку</div>
+    <textarea id="add-txt" rows="7" placeholder="joseolanosastreria:pass:email@ex.com:epass:KEY&#10;hayaanueva99:pass2:email2@ex.com:epass2:KEY2"></textarea>
+    <div class="modal-row">
+      <span class="modal-label">ГЕО:</span>
+      <input type="text" id="add-geo" class="geo-input" value="GEO" style="resize:none;height:32px;padding:4px 8px;font-family:inherit;">
+      <span class="modal-count" id="add-cnt">0 строк</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAdd()">Отмена</button>
+      <button class="btn btn-purple" onclick="addAccs()">Добавить →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="overlay" id="cfg-modal" style="display:none" onclick="if(event.target===this)closeCfg()">
+  <div class="modal">
+    <div class="modal-title">⚙ Настройки</div>
+
+    <label class="field-label">Anthropic API Key <span class="api-badge" id="api-badge"></span></label>
+    <div class="api-key-wrap">
+      <input type="password" id="cfg-key" placeholder="sk-ant-api03-...">
+      <button class="toggle-pw" onclick="togglePw('cfg-key',this)">👁</button>
+    </div>
+
+    <div class="sep"></div>
+
+    <label class="field-label">OnlyMonster URL</label>
+    <input type="text" id="cfg-om" placeholder="https://onlymonster.ai/s/...">
+
+    <div class="sep"></div>
+
+    <label class="field-label">URL для авто-обновлений</label>
+    <input type="text" id="cfg-upd" placeholder="https://raw.githubusercontent.com/username/repo/main/ig-tracker.html">
+    <div class="field-hint">
+      Raw-ссылка на файл в GitHub. Когда загрузишь новую версию — приложение покажет кнопку «Установить».
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeCfg()">Отмена</button>
+      <button class="btn btn-red" onclick="clearStats()" style="margin-right:auto">🗑 Сбросить статистику</button>
+      <button class="btn btn-purple" onclick="saveCfg()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const APP_VERSION = '1.0.0';
+
+const LS = {
+  get: k => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } },
+  set: (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) { console.error(e); } },
+  del: k => { try { localStorage.removeItem(k); } catch {} }
+};
+
+let accs=[], stats={}, omUrl='https://onlymonster.ai/s/to98HABPol6',
+    apiKey='', updUrl='', busy=false, stMap={}, editKey=null, lastAuto='';
+
+const dk = (d=new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const dl = k => { const[,m,d]=k.split('-'); return `${d}.${m}`; };
+const gu = c => c.split(':')[0].trim();
+const uid = () => Math.random().toString(36).slice(2,8);
+const fmt = n => (n||0).toLocaleString('ru');
+
+function log(msg, type='info') {
+  const lb = document.getElementById('log');
+  const e = document.createElement('div');
+  e.className = `log-entry log-${type}`;
+  e.textContent = `[${new Date().toLocaleTimeString('ru')}] ${msg}`;
+  const empty = lb.querySelector('.log-empty');
+  if (empty) empty.remove();
+  lb.insertBefore(e, lb.firstChild);
+  if (lb.children.length > 60) lb.removeChild(lb.lastChild);
+}
+
+function days() {
+  const d=[];
+  for(let i=14;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);d.push(dk(dt));}
+  return d;
+}
+
+const totViews = day => Object.values(stats[day]?.accounts||{}).reduce((s,v)=>s+(v||0),0);
+
+function prevStat(day,f) {
+  const ds=days(), i=ds.indexOf(day);
+  for(let j=i-1;j>=0;j--) if(stats[ds[j]]) return f==='cl'?(stats[ds[j]].totalClicks||0):(stats[ds[j]].totalFans||0);
+  return null;
+}
+
+function delta(day,f) {
+  const cur=stats[day]; if(!cur) return null;
+  const v=f==='cl'?(cur.totalClicks||0):(cur.totalFans||0);
+  const p=prevStat(day,f); return p===null?v:v-p;
+}
+
+function render() {
+  const ds=days(), today=dk();
+  let h=`<tr><th class="acc-col">Аккаунт</th>`;
+  ds.forEach(d=>{ h+=`<th class="${d===today?'today-h':''}" style="text-align:center;min-width:70px">${dl(d)}${d===today?' ✦':''}</th>`; });
+  document.getElementById('thead').innerHTML = h+'</tr>';
+
+  let b='';
+  accs.forEach((a,i)=>{
+    const u=gu(a.credentials), st=stMap[a.id]||'', cls=i%2?'row-even':'row-odd', bg=i%2?'#111118':'#09090F';
+    const stH = st ? `<span class="st-icon">${st}</span>` : `<span class="st-dot"></span>`;
+    b+=`<tr class="${cls}"><td class="acc-td" style="background:${bg}">
+      <div class="acc-row">${stH}<span class="acc-at">@</span>
+        <span class="acc-name" title="${u}">${u}</span>
+        <span class="acc-geo">${a.geo}</span>
+        <button class="del-btn" onclick="delAcc('${a.id}')">×</button>
+      </div></td>`;
+    ds.forEach(d=>{
+      const v=stats[d]?.accounts?.[a.id], ek=`${a.id}:${d}`, tc=d===today?'today-td':'';
+      if(editKey===ek){
+        b+=`<td class="${tc}"><input class="cell-input" id="ei-${ek}" value="${v??0}"
+          onblur="commitEdit('${a.id}','${d}')" onkeydown="ek(event,'${a.id}','${d}')"></td>`;
+      } else {
+        const col=v!=null?'#C0C0D8':'#33334A';
+        b+=`<td class="${tc}"><span class="cell-val" style="color:${col}" onclick="startEdit('${a.id}','${d}')">${v!=null?fmt(v):'—'}</span></td>`;
+      }
+    });
+    b+='</tr>';
+  });
+
+  if(!accs.length) b=`<tr class="empty-row"><td colspan="${ds.length+1}">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>`;
+  b+=`<tr class="divider-row"><td colspan="${ds.length+1}"></td></tr>`;
+
+  b+=`<tr class="total-row total-views"><td class="acc-td lbl" style="text-align:left">Всего вивов</td>`;
+  ds.forEach(d=>{const t=totViews(d),tc=d===today?'today-td':'';b+=`<td class="${tc} num">${t?fmt(t):'—'}</td>`;});b+='</tr>';
+
+  b+=`<tr class="total-row total-clicks"><td class="acc-td lbl" style="text-align:left">Кликов за день</td>`;
+  ds.forEach(d=>{const v=delta(d,'cl'),tc=d===today?'today-td':'';b+=`<td class="${tc} num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</td>`;});b+='</tr>';
+
+  b+=`<tr class="total-row total-fans"><td class="acc-td lbl" style="text-align:left">Фанов за день</td>`;
+  ds.forEach(d=>{const v=delta(d,'fa'),tc=d===today?'today-td':'';b+=`<td class="${tc} num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</td>`;});b+='</tr>';
+
+  document.getElementById('tbody').innerHTML = b;
+  if(editKey){const inp=document.getElementById(`ei-${editKey}`);if(inp){inp.focus();inp.select();}}
+}
+
+function startEdit(aid,day){editKey=`${aid}:${day}`;render();}
+function ek(e,aid,day){if(e.key==='Enter')commitEdit(aid,day);if(e.key==='Escape'){editKey=null;render();}}
+function commitEdit(aid,day){
+  const inp=document.getElementById(`ei-${aid}:${day}`);if(!inp)return;
+  const n=parseInt(inp.value)||0;
+  if(!stats[day])stats[day]={accounts:{},totalClicks:0,totalFans:0};
+  stats[day].accounts[aid]=n; editKey=null;
+  LS.set('ig-s',stats);
+  log(`✏ @${gu(accs.find(a=>a.id===aid)?.credentials||'?')} ${dl(day)}: ${fmt(n)}`,'ok');
+  render();
+}
+
+async function api(msg) {
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,
+      system:'Return ONLY valid JSON. No markdown, no backticks, no extra text.',
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      messages:[{role:'user',content:msg}]})
+  });
+  if(!r.ok){const t=await r.text();throw new Error(`API ${r.status}: ${t}`);}
+  const d=await r.json();
+  return d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+
+async function fetchIG(user) {
+  const date=new Date().toISOString().slice(0,10);
+  try {
+    const raw=await api(
+      `Search instagram.com/${user}/reels/ for user @${user}. Today is ${date}. `+
+      `Find ONLY reels uploaded in the last 24 hours. Sum their view counts. `+
+      `If none posted in 24h return views:0. `+
+      `JSON only: {"views":<integer>,"reels_count":<integer>,"found":<bool>}`
+    );
+    const p=JSON.parse(raw.replace(/```\w*\n?|```/g,'').trim());
+    return{views:parseInt(p.views)||0,reels_count:parseInt(p.reels_count)||0,found:!!p.found};
+  }catch(e){console.error(e);return{views:0,reels_count:0,found:false};}
+}
+
+async function fetchOM(url) {
+  try {
+    const raw=await api(`Fetch this page: ${url} Find "Total clicks" and "Total fans". JSON only: {"totalClicks":<int>,"totalFans":<int>,"found":<bool>}`);
+    const p=JSON.parse(raw.replace(/```\w*\n?|```/g,'').trim());
+    return{totalClicks:parseInt(p.totalClicks)||0,totalFans:parseInt(p.totalFans)||0,found:!!p.found};
+  }catch(e){console.error(e);return{totalClicks:0,totalFans:0,found:false};}
+}
+
+async function doFetch() {
+  if(busy||!accs.length)return;
+  if(!apiKey){alert('Укажи API Key в настройках (⚙)');return;}
+  busy=true;
+  const btn=document.getElementById('fetch-btn');
+  btn.disabled=true;btn.textContent='⏳ Сбор...';
+  const today=dk();
+  log(`🔄 Начало сбора за ${dl(today)}...`,'info');
+  if(!stats[today])stats[today]={accounts:{},totalClicks:0,totalFans:0};
+  if(!stats[today].accounts)stats[today].accounts={};
+
+  for(const a of accs){
+    const u=gu(a.credentials);
+    stMap[a.id]='⏳'; updSt(a.id);
+    try{
+      log(`📸 @${u}...`,'info');
+      const r=await fetchIG(u);
+      stats[today].accounts[a.id]=r.views;
+      stMap[a.id]=r.found?'✅':'⚠️'; updSt(a.id);
+      log(`${r.found?'✓':'⚠'} @${u}: ${r.reels_count} рилс → ${fmt(r.views)} views`,r.found?'ok':'warn');
+    }catch{
+      stats[today].accounts[a.id]=0; stMap[a.id]='❌'; updSt(a.id);
+      log(`✗ @${u}: ошибка`,'err');
+    }
+    render();
+  }
+
+  try{
+    log('🎯 OnlyMonster...','info');
+    const om=await fetchOM(omUrl);
+    stats[today].totalClicks=om.totalClicks; stats[today].totalFans=om.totalFans;
+    log(`${om.found?'✓':'⚠'} OM: ${fmt(om.totalClicks)} кл, ${fmt(om.totalFans)} ф`,om.found?'ok':'warn');
+  }catch{log('✗ OnlyMonster: ошибка','err');}
+
+  LS.set('ig-s',stats); busy=false;
+  btn.disabled=false; btn.textContent='🔄 Обновить';
+  log('✅ Готово!','ok'); render();
+}
+
+function updSt(id){
+  const el=document.getElementById(`st-${id}`);
+  if(el){el.textContent=stMap[id]||'';el.className='st-icon';}
+}
+
+// AUTO-UPDATE
+async function checkUpdates() {
+  if(!updUrl)return;
+  try{
+    const r=await fetch(updUrl+'?_t='+Date.now());
+    if(!r.ok)return;
+    const html=await r.text();
+    const m=html.match(/APP_VERSION\s*=\s*'([\d.]+)'/);
+    if(!m)return;
+    if(isNewer(m[1],APP_VERSION)) showUpdateBanner(html,m[1]);
+  }catch(e){console.log('Update check:',e);}
+}
+
+function isNewer(a,b){
+  const r=a.split('.').map(Number),c=b.split('.').map(Number);
+  for(let i=0;i<3;i++){if((r[i]||0)>(c[i]||0))return true;if((r[i]||0)<(c[i]||0))return false;}
+  return false;
+}
+
+function showUpdateBanner(html,ver){
+  if(document.getElementById('upd-banner'))return;
+  const el=document.createElement('div');
+  el.id='upd-banner'; el.className='upd-banner';
+  el.innerHTML=`<span class="upd-text">🚀 <strong>Обновление v${ver} готово!</strong></span>
+    <button class="btn btn-purple" style="font-size:11px;padding:5px 11px" id="upd-install-btn">Установить</button>
+    <button class="upd-close" onclick="this.parentElement.remove()">×</button>`;
+  document.body.appendChild(el);
+  document.getElementById('upd-install-btn').onclick = () => {
+    LS.set('ig-pending',html); location.reload();
+  };
+}
+
+function applyPending(){
+  const p=LS.get('ig-pending');
+  if(!p)return;
+  LS.del('ig-pending');
+  document.open(); document.write(p); document.close();
+}
+
+// ACCOUNTS
+function openAdd(){document.getElementById('add-modal').style.display='flex'; document.getElementById('add-txt').focus();}
+function closeAdd(){document.getElementById('add-modal').style.display='none';}
+
+document.getElementById('add-txt').addEventListener('input',function(){
+  document.getElementById('add-cnt').textContent=`${this.value.split('\n').filter(l=>l.trim()).length} строк`;
+});
+
+function addAccs(){
+  const txt=document.getElementById('add-txt').value;
+  const geo=document.getElementById('add-geo').value||'GEO';
+  const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
+  lines.forEach(l=>accs.push({id:uid(),credentials:l,geo}));
+  LS.set('ig-a',accs);
+  log(`➕ Добавлено: ${lines.length} аккаунтов`,'ok');
+  closeAdd(); document.getElementById('add-txt').value='';
+  document.getElementById('add-cnt').textContent='0 строк';
+  render();
+}
+
+function delAcc(id){
+  accs=accs.filter(a=>a.id!==id); delete stMap[id];
+  LS.set('ig-a',accs); log('🗑 Аккаунт удалён','info'); render();
+}
+
+// SETTINGS
+function openCfg(){
+  document.getElementById('cfg-key').value=apiKey;
+  document.getElementById('cfg-om').value=omUrl;
+  document.getElementById('cfg-upd').value=updUrl;
+  const b=document.getElementById('api-badge');
+  if(apiKey){b.className='api-badge api-ok';b.textContent='✓ есть';}
+  else{b.className='api-badge api-miss';b.textContent='✗ нет';}
+  document.getElementById('cfg-modal').style.display='flex';
+}
+function closeCfg(){document.getElementById('cfg-modal').style.display='none';}
+
+function saveCfg(){
+  const k=document.getElementById('cfg-key').value.trim();
+  if(k){apiKey=k;LS.set('ig-k',k);}
+  omUrl=document.getElementById('cfg-om').value.trim()||omUrl;
+  updUrl=document.getElementById('cfg-upd').value.trim();
+  LS.set('ig-c',{om:omUrl,upd:updUrl});
+  closeCfg(); log('⚙ Настройки сохранены','ok');
+}
+
+function clearStats(){
+  if(!confirm('Удалить всю статистику? Аккаунты и ключ останутся.'))return;
+  stats={}; LS.del('ig-s'); closeCfg();
+  log('🗑 Статистика очищена','warn'); render();
+}
+
+// SETUP
+function validateSetup(){
+  document.getElementById('setup-btn').disabled=!document.getElementById('setup-key').value.trim().startsWith('sk-ant-');
+}
+function doSetup(){
+  const k=document.getElementById('setup-key').value.trim();
+  if(!k)return; apiKey=k; LS.set('ig-k',k); showMain();
+}
+
+function togglePw(id,btn){
+  const inp=document.getElementById(id);
+  inp.type=inp.type==='password'?'text':'password';
+  btn.textContent=inp.type==='password'?'👁':'🙈';
+}
+
+function showMain(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('hdr').style.display='flex';
+  document.getElementById('bdy').style.display='flex';
+  document.getElementById('ver').textContent=`v${APP_VERSION}`;
+  render();
+  if(accs.length) log(`Загружено: ${accs.length} аккаунтов, ${Object.keys(stats).length} дней`,'ok');
+  else log('Добавь аккаунты чтобы начать','info');
+  setTimeout(checkUpdates,3000);
+}
+
+// COUNTDOWN + AUTO-FETCH
+setInterval(()=>{
+  const now=new Date(),mid=new Date(now); mid.setHours(24,0,0,0);
+  const diff=mid-now, h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
+  const el=document.getElementById('cd');
+  if(el) el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const today=dk();
+  if(h===0&&m===4&&s===59&&lastAuto!==today&&!busy){lastAuto=today;doFetch();}
+},1000);
+
+setInterval(checkUpdates, 30*60*1000);
+
+// INIT
+(function(){
+  applyPending();
+  const k=LS.get('ig-k'), a=LS.get('ig-a'), s=LS.get('ig-s'), c=LS.get('ig-c');
+  if(a) accs=a; if(s) stats=s;
+  if(c?.om) omUrl=c.om; if(c?.upd) updUrl=c.upd;
+  if(k){apiKey=k;showMain();}
+  else document.getElementById('setup').style.display='flex';
+})();
+</script>
+</body>
+</html>

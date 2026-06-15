@@ -94,6 +94,28 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
 .upd-text{font-size:12px;color:#C0A0FF;}
 .upd-text strong{color:#E0D0FF;font-weight:600;}
 .upd-close{background:none;border:none;color:#555577;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
+.sort-btn{background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600;transition:all .15s;flex-shrink:0;}
+.sort-btn.active{background:#1A1030;border-color:#7C5CFC;color:#A080FF;}
+.sort-btn:hover{border-color:#333348;}
+.cred-grid{display:grid;grid-template-columns:80px 1fr auto;gap:6px 8px;align-items:center;margin-top:4px;}
+.cred-label{font-size:11px;color:#666688;text-align:right;}
+.cred-input{background:#09090F;border:1px solid #1E1E2C;border-radius:5px;padding:6px 9px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;width:100%;transition:border-color .15s;}
+.cred-input:focus{border-color:#7C5CFC;}
+.cred-actions{display:flex;gap:3px;}
+.cred-btn{background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.cred-btn:hover{border-color:#444;color:#C0C0D8;}
+.cred-btn.copied{background:#0A2018;border-color:#0EC99A;color:#0EC99A;}
+.cred-full{font-size:10px;color:#33334A;font-family:monospace;background:#0D0D16;border:1px solid #1A1A2A;border-radius:5px;padding:7px 9px;margin-top:8px;word-break:break-all;line-height:1.6;cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+.cred-full:hover{border-color:#2A2A3A;}
+.cred-full-text{flex:1;}
+.cred-full-copy{font-size:10px;background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:4px;padding:2px 7px;cursor:pointer;flex-shrink:0;transition:all .15s;}
+.cred-full-copy:hover{color:#E0E0EE;}
+.stat-pct-row td{font-size:10px!important;padding:3px 9px!important;background:#0C0C18!important;}
+.stat-pct-row .lbl{color:#55557A;font-weight:700;font-size:10px;letter-spacing:.04em;text-transform:uppercase;}
+.pct-val{display:inline-flex;align-items:center;gap:3px;font-weight:600;}
+.pct-60{color:#0EC99A;} .pct-6{color:#6ECFF0;} .pct-low{color:#FFB020;} .pct-fail{color:#FF4D6A;}
+.total-row td.editable-total{cursor:pointer;}
+.total-row td.editable-total:hover .num{text-decoration:underline;text-underline-offset:2px;}
 .acc-name-btn{font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:115px;color:#E0E0EE;background:none;border:none;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-align:left;}
 .acc-name-btn:hover{color:#7C5CFC;text-decoration:underline;}
 .cred-grid{display:grid;grid-template-columns:90px 1fr;gap:6px 10px;align-items:center;margin-top:4px;}
@@ -117,6 +139,7 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
   <div class="spacer"></div>
   <span class="countdown">До полуночи: <span class="cd-val" id="cd">—</span></span>
   <button class="btn btn-ghost" onclick="openCfg()">⚙ Настройки</button>
+  <button id="sort-btn" class="sort-btn" onclick="toggleSort()" title="Сортировать по просмотрам">↕ По вивам</button>
   <button class="btn btn-ghost" onclick="openAdd()">+ Аккаунты</button>
   <button class="btn btn-green" id="fetch-btn" onclick="doFetch()">🔄 Обновить</button>
 </div>
@@ -213,18 +236,33 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
     <div class="cred-grid">
       <span class="cred-label">Логин</span>
       <input class="cred-input" id="ed-login" placeholder="username">
+      <div class="cred-actions"><button class="cred-btn" onclick="copyField('ed-login',this)">📋</button></div>
       <span class="cred-label">Пароль</span>
-      <input class="cred-input" id="ed-pass" placeholder="password" type="password">
+      <input class="cred-input" id="ed-pass" placeholder="password" type="text">
+      <div class="cred-actions">
+        <button class="cred-btn" onclick="toggleFieldVis('ed-pass',this)">👁</button>
+        <button class="cred-btn" onclick="copyField('ed-pass',this)">📋</button>
+      </div>
       <span class="cred-label">Email</span>
       <input class="cred-input" id="ed-email" placeholder="email@example.com">
+      <div class="cred-actions"><button class="cred-btn" onclick="copyField('ed-email',this)">📋</button></div>
       <span class="cred-label">Email пароль</span>
-      <input class="cred-input" id="ed-epass" placeholder="emailpassword" type="password">
+      <input class="cred-input" id="ed-epass" placeholder="emailpassword" type="text">
+      <div class="cred-actions">
+        <button class="cred-btn" onclick="toggleFieldVis('ed-epass',this)">👁</button>
+        <button class="cred-btn" onclick="copyField('ed-epass',this)">📋</button>
+      </div>
       <span class="cred-label">Ключ / 2FA</span>
       <input class="cred-input" id="ed-key" placeholder="key or 2FA seed">
+      <div class="cred-actions"><button class="cred-btn" onclick="copyField('ed-key',this)">📋</button></div>
       <span class="cred-label">ГЕО</span>
       <input class="cred-input" id="ed-geo" placeholder="RU">
+      <div class="cred-actions"><button class="cred-btn" onclick="copyField('ed-geo',this)">📋</button></div>
     </div>
-    <div class="cred-full" id="ed-full-str" title="Нажми чтобы скопировать" onclick="copyCredStr()"></div>
+    <div class="cred-full" id="ed-full-str">
+      <span class="cred-full-text" id="ed-full-text">—</span>
+      <button class="cred-full-copy" onclick="copyCredStr(this)">📋 Копировать всё</button>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeEditAcc()">Отмена</button>
       <button class="btn btn-red" onclick="delAccFromEdit()" style="margin-right:auto">🗑 Удалить</button>
@@ -242,7 +280,7 @@ const LS = {
   del: k => { try { localStorage.removeItem(k); } catch {} }
 };
 
-let accs=[], stats={}, omUrl='https://onlymonster.ai/s/to98HABPol6',
+let accs=[], stats={}, omUrl='https://onlymonster.ai/s/to98HABPol6', sortByViews=false,
     apiKey='', updUrl='', busy=false, stMap={}, editKey=null, lastAuto='';
 
 const dk = (d=new Date()) =>
@@ -283,6 +321,22 @@ function delta(day,f) {
   const p=prevStat(day,f); return p===null?v:v-p;
 }
 
+function toggleSort(){
+  sortByViews=!sortByViews;
+  const btn=document.getElementById('sort-btn');
+  if(btn){btn.classList.toggle('active',sortByViews);btn.textContent=sortByViews?'↕ По вивам ✦':'↕ По вивам';}
+  render();
+}
+
+function getSortedAccs(){
+  if(!sortByViews) return accs;
+  const today=dk();
+  return [...accs].sort((a,b)=>{
+    const va=stats[today]?.accounts?.[a.id]||0, vb=stats[today]?.accounts?.[b.id]||0;
+    return vb-va;
+  });
+}
+
 function render() {
   const ds=days(), today=dk();
   let h=`<tr><th class="acc-col">Аккаунт</th>`;
@@ -290,7 +344,7 @@ function render() {
   document.getElementById('thead').innerHTML = h+'</tr>';
 
   let b='';
-  accs.forEach((a,i)=>{
+  getSortedAccs().forEach((a,i)=>{
     const u=gu(a.credentials), st=stMap[a.id]||'', cls=i%2?'row-even':'row-odd', bg=i%2?'#111118':'#09090F';
     const stH = st ? `<span class="st-icon">${st}</span>` : `<span class="st-dot"></span>`;
     const rowErrCls = stMap[a.id]==='❌'?'row-err':stMap[a.id]==='⚠️'?'row-warn':'';
@@ -317,13 +371,52 @@ function render() {
   b+=`<tr class="divider-row"><td colspan="${ds.length+1}"></td></tr>`;
 
   b+=`<tr class="total-row total-views"><td class="acc-td lbl" style="text-align:left">Всего вивов</td>`;
-  ds.forEach(d=>{const t=totViews(d),tc=d===today?'today-td':'';b+=`<td class="${tc} num">${t?fmt(t):'—'}</td>`;});b+='</tr>';
+  ds.forEach(d=>{
+    const t=stats[d]?.totalViewsOverride??totViews(d),tc=d===today?'today-td':'';
+    b+=`<td class="${tc} num editable-total" onclick="startEditTotal('views','${d}')">`+
+    (editKey===`_views:${d}`?`<input class="cell-input" id="ei-_views:${d}" value="${t||0}" onblur="commitTotal('views','${d}')" onkeydown="ek(event,'_views','${d}')">`:
+    `<span class="num">${t?fmt(t):'—'}</span>`)+`</td>`;
+  });b+='</tr>';
 
   b+=`<tr class="total-row total-clicks"><td class="acc-td lbl" style="text-align:left">Кликов за день</td>`;
-  ds.forEach(d=>{const v=delta(d,'cl'),tc=d===today?'today-td':'';b+=`<td class="${tc} num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</td>`;});b+='</tr>';
+  ds.forEach(d=>{const v=delta(d,'cl'),tc=d===today?'today-td':'';
+    b+=`<td class="${tc} num editable-total" onclick="startEditTotal('clicks','${d}')">`+
+    (editKey===`_clicks:${d}`?`<input class="cell-input" id="ei-_clicks:${d}" value="${v??0}" onblur="commitTotal('clicks','${d}')" onkeydown="ek(event,'_clicks','${d}')">`:
+    `<span class="num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</span>`)+`</td>`;
+  });b+='</tr>';
 
   b+=`<tr class="total-row total-fans"><td class="acc-td lbl" style="text-align:left">Фанов за день</td>`;
-  ds.forEach(d=>{const v=delta(d,'fa'),tc=d===today?'today-td':'';b+=`<td class="${tc} num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</td>`;});b+='</tr>';
+  ds.forEach(d=>{const v=delta(d,'fa'),tc=d===today?'today-td':'';
+    b+=`<td class="${tc} num editable-total" onclick="startEditTotal('fans','${d}')">`+
+    (editKey===`_fans:${d}`?`<input class="cell-input" id="ei-_fans:${d}" value="${v??0}" onblur="commitTotal('fans','${d}')" onkeydown="ek(event,'_fans','${d}')">`:
+    `<span class="num">${v!=null?(v>=0?'+':'')+fmt(v):'—'}</span>`)+`</td>`;});b+='</tr>';
+
+  // PCT STATS ROWS
+  const pctRows=[
+    {id:'pct60',lbl:'>60к вивов',cls:'pct-60',test:v=>v>=60000},
+    {id:'pct6', lbl:'>6к вивов', cls:'pct-6', test:v=>v>=6000&&v<60000},
+    {id:'pctlo',lbl:'<6к вивов', cls:'pct-low',test:v=>v<6000&&v>0},
+    {id:'pctfl',lbl:'Отлетело',  cls:'pct-fail',test:(v,st)=>st==='❌'||st==='⚠️'},
+  ];
+  pctRows.forEach(row=>{
+    b+=`<tr class="stat-pct-row"><td class="acc-td lbl" style="text-align:left">${row.lbl}</td>`;
+    ds.forEach(d=>{
+      const tc=d===today?'today-td':'';
+      const dayAccs=accs.filter(a=>stats[d]?.accounts!=null);
+      if(!dayAccs.length||!stats[d]){b+=`<td class="${tc}">—</td>`;return;}
+      const total=accs.length;
+      let count;
+      if(row.id==='pctfl'){
+        count=accs.filter(a=>stMap[a.id]==='❌'||stMap[a.id]==='⚠️').length;
+        if(d!==today){count=0;}
+      } else {
+        count=accs.filter(a=>{const v=stats[d]?.accounts?.[a.id];return v!=null&&row.test(v,stMap[a.id]);}).length;
+      }
+      const pct=total?Math.round(count/total*100):0;
+      b+=`<td class="${tc}"><span class="pct-val ${row.cls}">${count} <span style="opacity:.6;font-weight:400">(${pct}%)</span></span></td>`;
+    });
+    b+='</tr>';
+  });
 
   document.getElementById('tbody').innerHTML = b;
   if(editKey){const inp=document.getElementById(`ei-${editKey}`);if(inp){inp.focus();inp.select();}}
@@ -495,6 +588,29 @@ async function retryFailed() {
   log('✅ Повтор завершён', 'ok');
 }
 
+// EDIT TOTAL ROWS
+function startEditTotal(field, day) {
+  editKey = `_${field}:${day}`; render();
+}
+
+function commitTotal(field, day) {
+  const inp = document.getElementById(`ei-_${field}:${day}`); if(!inp) return;
+  const n = parseInt(inp.value)||0;
+  if(!stats[day]) stats[day]={accounts:{},totalClicks:0,totalFans:0};
+  if(field==='views'){stats[day].totalViewsOverride=n||undefined; if(!n) delete stats[day].totalViewsOverride;}
+  if(field==='clicks'){
+    // store as raw total (reverse-delta: add prev)
+    const p=prevStat(day,'cl');
+    stats[day].totalClicks = p!=null ? (p+n) : n;
+  }
+  if(field==='fans'){
+    const p=prevStat(day,'fa');
+    stats[day].totalFans = p!=null ? (p+n) : n;
+  }
+  editKey=null; LS.set('ig-s',stats);
+  log(`✏ Строка ${field} ${dl(day)}: ${fmt(n)}`,'ok'); render();
+}
+
 // EDIT ACCOUNT
 let editAccId = null;
 
@@ -533,15 +649,28 @@ function updateCredPreview() {
     document.getElementById('ed-key').value
   ].join(':');
   const el = document.getElementById('ed-full-str');
-  el.textContent = vals || '—';
+  const pEl = document.getElementById('ed-full-text');
+  if(pEl) pEl.textContent = vals || '—';
 }
 
-function copyCredStr() {
-  const t = document.getElementById('ed-full-str').textContent;
+function copyField(id, btn) {
+  const val = document.getElementById(id)?.value || '';
+  navigator.clipboard.writeText(val).then(() => {
+    if(btn){btn.classList.add('copied');btn.textContent='✓';setTimeout(()=>{btn.classList.remove('copied');btn.textContent='📋';},1200);}
+  });
+}
+
+function toggleFieldVis(id, btn) {
+  const inp = document.getElementById(id);
+  if(!inp) return;
+  inp.type = inp.type==='password'?'text':'password';
+  btn.textContent = inp.type==='password'?'👁':'🙈';
+}
+
+function copyCredStr(btn) {
+  const t = document.getElementById('ed-full-text')?.textContent || '';
   navigator.clipboard.writeText(t).then(() => {
-    const el = document.getElementById('ed-full-str');
-    el.style.color = '#0EC99A';
-    setTimeout(() => { el.style.color = ''; }, 1000);
+    if(btn){const orig=btn.textContent;btn.textContent='✓ Скопировано';btn.style.color='#0EC99A';setTimeout(()=>{btn.textContent=orig;btn.style.color='';},1500);}
   });
 }
 

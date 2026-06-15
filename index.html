@@ -266,7 +266,7 @@ const LS={
 
 let accs=[],stats={},omUrl='https://onlymonster.ai/s/to98HABPol6',
     apiKey='',updUrl='',busy=false,stMap={},editKey=null,
-    baseOffset=0,numCols=15,sortCol=null,sortDir='desc',lastAuto='',eaId=null;
+    baseOffset=0,numCols=15,sortStates={},sortOrder=[],lastAuto='',eaId=null;
 
 // ── DATE HELPERS ──
 const dk=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -319,18 +319,31 @@ function vc(views,status){
 
 // ── SORT ──
 function toggleSort(day){
-  if(sortCol===day){
-    if(sortDir==='desc') sortDir='asc';
-    else{sortCol=null;sortDir='desc';} // 3rd click = reset
-  } else{sortCol=day;sortDir='desc';}
+  const cur=sortStates[day];
+  if(!cur){
+    // 1st click: sort desc, add to front of priority
+    sortStates[day]='desc';
+    sortOrder=[day,...sortOrder.filter(d=>d!==day)];
+  } else if(cur==='desc'){
+    // 2nd click: sort asc
+    sortStates[day]='asc';
+  } else {
+    // 3rd click: remove this column's sort
+    delete sortStates[day];
+    sortOrder=sortOrder.filter(d=>d!==day);
+  }
   render();
 }
 function sortedAccs(){
-  if(!sortCol)return accs;
+  if(!sortOrder.length)return accs;
   return[...accs].sort((a,b)=>{
-    const va=stats[sortCol]?.accounts?.[a.id]??-1;
-    const vb=stats[sortCol]?.accounts?.[b.id]??-1;
-    return sortDir==='desc'?vb-va:va-vb;
+    for(const day of sortOrder){
+      const dir=sortStates[day];if(!dir)continue;
+      const va=stats[day]?.accounts?.[a.id]??-1;
+      const vb=stats[day]?.accounts?.[b.id]??-1;
+      if(va!==vb)return dir==='desc'?vb-va:va-vb;
+    }
+    return 0;
   });
 }
 
@@ -344,11 +357,12 @@ function render(){
   // HEADER
   let h='<tr><th class="acc-col">Аккаунт</th>';
   ds.forEach(d=>{
-    const isTd=(d===today),isSrt=(sortCol===d);
-    const arrow=isSrt?(sortDir==='desc'?'↓':'↑'):'↕';
+    const isTd=(d===today),isSrt=!!sortStates[d],sdir=sortStates[d];
+    const arrow=sdir==='desc'?'↓':sdir==='asc'?'↑':'↕';
+    const isPri=(sortOrder[0]===d); // primary sort column
     const bg=isTd?'background:#12102A':'background:#0B0B12';
     const lclr=isTd?'#7C5CFC':(isSrt?'#A080FF':'#666688');
-    const bbg=isSrt?'background:#1A1030;border-color:#7C5CFC;color:#C0A0FF':'background:#151520;border-color:#252535;color:#606080';
+    const bbg=isSrt?(isPri?'background:#1A1030;border-color:#7C5CFC;color:#E0D0FF':'background:#141020;border-color:#553388;color:#A080D0'):'background:#151520;border-color:#252535;color:#606080';
     h+='<th style="'+bg+';text-align:center;min-width:82px;padding:0;border-right:1px solid #1E1E2C">'
       +'<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 4px 4px">'
       +'<span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:'+lclr+'">'+dl(d)+(isTd?' ✦':'')+'</span>'

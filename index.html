@@ -94,9 +94,14 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
 .upd-text{font-size:12px;color:#C0A0FF;}
 .upd-text strong{color:#E0D0FF;font-weight:600;}
 .upd-close{background:none;border:none;color:#555577;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
-.sort-btn{background:#1A1A26;border:1px solid #1E1E2C;color:#7B7B96;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600;transition:all .15s;flex-shrink:0;}
-.sort-btn.active{background:#1A1030;border-color:#7C5CFC;color:#A080FF;}
-.sort-btn:hover{border-color:#333348;}
+.nav-btn{background:#1A1A26;border:1px solid #1E1E2C;color:#A0A0C0;border-radius:6px;padding:4px 11px;font-size:13px;cursor:pointer;font-weight:700;transition:all .15s;flex-shrink:0;line-height:1;}
+.nav-btn:hover{background:#22222E;border-color:#333348;}
+.nav-bar{display:flex;align-items:center;gap:6px;padding:5px 14px;border-bottom:1px solid #1E1E2C;background:#0D0D14;flex-shrink:0;}
+.nav-range{font-size:11px;color:#55557A;font-family:monospace;flex:1;text-align:center;}
+.th-sortable{cursor:pointer;user-select:none;}
+.th-sortable:hover{color:#A0A0FF!important;background:#14122A!important;}
+.th-sorted{color:#7C5CFC!important;background:#12102A!important;}
+.sort-arrow{font-size:9px;margin-left:3px;opacity:.7;}
 .cred-grid{display:grid;grid-template-columns:80px 1fr auto;gap:6px 8px;align-items:center;margin-top:4px;}
 .cred-label{font-size:11px;color:#666688;text-align:right;}
 .cred-input{background:#09090F;border:1px solid #1E1E2C;border-radius:5px;padding:6px 9px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;width:100%;transition:border-color .15s;}
@@ -146,11 +151,18 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
   <div class="spacer"></div>
   <span class="countdown">До полуночи: <span class="cd-val" id="cd">—</span></span>
   <button class="btn btn-ghost" onclick="openCfg()">⚙ Настройки</button>
-  <button id="sort-btn" class="sort-btn" onclick="toggleSort()" title="Сортировать по просмотрам">↕ По просм.</button>
   <button class="btn btn-ghost" onclick="openAdd()">+ Аккаунты</button>
   <button class="btn btn-green" id="fetch-btn" onclick="doFetch()">🔄 Обновить</button>
 </div>
 
+<div class="nav-bar" id="nav-bar" style="display:none">
+  <button class="nav-btn" onclick="navShift(30)" title="−1 месяц">◀◀</button>
+  <button class="nav-btn" onclick="navShift(7)" title="−1 неделя">◀</button>
+  <span class="nav-range" id="nav-range">—</span>
+  <button class="nav-btn" onclick="navShift(-7)" title="+1 неделя">▶</button>
+  <button class="nav-btn" onclick="navShift(-30)" title="+1 месяц">▶▶</button>
+  <button class="nav-btn" onclick="navReset()" title="Вернуться к вчера" style="font-size:10px;padding:4px 9px">Сегодня</button>
+</div>
 <div class="body" id="bdy" style="display:none">
   <div class="table-wrap">
     <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
@@ -287,7 +299,7 @@ const LS = {
   del: k => { try { localStorage.removeItem(k); } catch {} }
 };
 
-let accs=[], stats={}, omUrl='https://onlymonster.ai/s/to98HABPol6', sortByViews=false,
+let accs=[], stats={}, omUrl='https://onlymonster.ai/s/to98HABPol6', baseOffset=1, numCols=15, sortCol=null, sortDir='desc',
     apiKey='', updUrl='', busy=false, stMap={}, editKey=null, lastAuto='';
 
 const dk = (d=new Date()) =>
@@ -310,8 +322,21 @@ function log(msg, type='info') {
 
 function days() {
   const d=[];
-  for(let i=14;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);d.push(dk(dt));}
+  const end=baseOffset, start=baseOffset+numCols-1;
+  for(let i=start;i>=end;i--){const dt=new Date();dt.setDate(dt.getDate()-i);d.push(dk(dt));}
   return d;
+}
+
+function navShift(delta){
+  baseOffset=Math.max(-30,Math.min(365,baseOffset+delta));
+  render();
+}
+
+function navReset(){baseOffset=1;sortCol=null;render();}
+
+function updateNavRange(ds){
+  const el=document.getElementById('nav-range');
+  if(el&&ds.length) el.textContent=`${dl(ds[0])} — ${dl(ds[ds.length-1])}`;
 }
 
 const totViews = day => Object.values(stats[day]?.accounts||{}).reduce((s,v)=>s+(v||0),0);
@@ -337,19 +362,22 @@ function getViewClass(views, status) {
   return '';
 }
 
-function toggleSort(){
-  sortByViews=!sortByViews;
-  const btn=document.getElementById('sort-btn');
-  if(btn){btn.classList.toggle('active',sortByViews);btn.textContent=sortByViews?'↕ По просм. ✦':'↕ По просм.';}
+function toggleColSort(day){
+  if(sortCol===day){
+    if(sortDir==='desc') sortDir='asc';
+    else {sortCol=null; sortDir='desc';}
+  } else {
+    sortCol=day; sortDir='desc';
+  }
   render();
 }
 
 function getSortedAccs(){
-  if(!sortByViews) return accs;
-  const today=dk();
+  if(!sortCol) return accs;
   return [...accs].sort((a,b)=>{
-    const va=stats[today]?.accounts?.[a.id]||0, vb=stats[today]?.accounts?.[b.id]||0;
-    return vb-va;
+    const va=stats[sortCol]?.accounts?.[a.id]??-1;
+    const vb=stats[sortCol]?.accounts?.[b.id]??-1;
+    return sortDir==='desc'?vb-va:va-vb;
   });
 }
 
@@ -835,6 +863,7 @@ function togglePw(id,btn){
 function showMain(){
   document.getElementById('setup').style.display='none';
   document.getElementById('hdr').style.display='flex';
+  document.getElementById('nav-bar').style.display='flex';
   document.getElementById('bdy').style.display='flex';
   document.getElementById('ver').textContent=`v${APP_VERSION}`;
   render();

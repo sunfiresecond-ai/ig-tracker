@@ -102,6 +102,10 @@ textarea:focus,input:focus{border-color:#7C5CFC;}
 .th-sortable:hover{color:#A0A0FF!important;background:#14122A!important;}
 .th-sorted{color:#7C5CFC!important;background:#12102A!important;}
 .sort-arrow{font-size:9px;margin-left:3px;opacity:.7;}
+.th-inner{display:flex;flex-direction:column;align-items:center;gap:2px;padding:1px 0;}
+.col-sort-btn{background:none;border:1px solid transparent;color:#33334A;border-radius:3px;padding:0 4px;font-size:10px;cursor:pointer;line-height:1.4;transition:all .12s;display:block;width:100%;}
+.col-sort-btn:hover{border-color:#333348;color:#7C5CFC;}
+.col-sort-btn.active-sort{color:#7C5CFC;border-color:#3A2A6A;background:#1A1030;}
 .cred-grid{display:grid;grid-template-columns:80px 1fr auto;gap:6px 8px;align-items:center;margin-top:4px;}
 .cred-label{font-size:11px;color:#666688;text-align:right;}
 .cred-input{background:#09090F;border:1px solid #1E1E2C;border-radius:5px;padding:6px 9px;color:#E0E0EE;font-size:12px;font-family:monospace;outline:none;width:100%;transition:border-color .15s;}
@@ -299,7 +303,7 @@ const LS = {
   del: k => { try { localStorage.removeItem(k); } catch {} }
 };
 
-let accs=[], stats={}, omUrl='https://onlymonster.ai/s/to98HABPol6', baseOffset=1, numCols=15, sortCol=null, sortDir='desc',
+let accs=[], stats={}, omUrl='https://onlymonster.ai/s/to98HABPol6', baseOffset=0, numCols=15, sortCol=null, sortDir='desc',
     apiKey='', updUrl='', busy=false, stMap={}, editKey=null, lastAuto='';
 
 const dk = (d=new Date()) =>
@@ -322,8 +326,12 @@ function log(msg, type='info') {
 
 function days() {
   const d=[];
+  const now=new Date(); now.setHours(0,0,0,0);
   const end=baseOffset, start=baseOffset+numCols-1;
-  for(let i=start;i>=end;i--){const dt=new Date();dt.setDate(dt.getDate()-i);d.push(dk(dt));}
+  for(let i=start;i>=end;i--){
+    const dt=new Date(now.getTime()-i*864e5);
+    d.push(dk(dt));
+  }
   return d;
 }
 
@@ -332,7 +340,7 @@ function navShift(delta){
   render();
 }
 
-function navReset(){baseOffset=1;sortCol=null;render();}
+function navReset(){baseOffset=0;sortCol=null;render();}
 
 function updateNavRange(ds){
   const el=document.getElementById('nav-range');

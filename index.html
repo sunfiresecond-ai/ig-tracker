@@ -362,12 +362,6 @@ function render(){
     b+='<button class="anm '+tvc+'" data-eid="'+a.id+'">'+u+'</button>';
     b+='<button class="del" data-did="'+a.id+'">×</button>';
     b+='</div></td>';
-    // image cell
-    var th=thumbs[a.id];
-    b+='<td class="itd" style="'+bg2+'" data-iid="'+a.id+'" data-inm="'+u+'">';
-    if(th)b+='<img class="thumb" src="'+th+'">';
-    else b+='<div class="add-img">+</div>';
-    b+='</td>';
     for(var di2=0;di2<ds.length;di2++){
       var d2=ds[di2];
       var v=(stats[d2]&&stats[d2].accounts)?stats[d2].accounts[a.id]:undefined;

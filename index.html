@@ -48,6 +48,9 @@ td{padding:5px 9px;border-right:1px solid #1E1E2C;font-size:12px;white-space:now
 .dot{width:6px;height:6px;border-radius:50%;background:#2A2A3A;flex-shrink:0;display:inline-block;vertical-align:middle}
 .anm{font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:130px;color:#E0E0EE;background:none;border:none;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-align:left}
 .anm:hover{color:#7C5CFC;text-decoration:underline}
+.img-btn{background:none;border:none;color:#2A2A3A;cursor:pointer;font-size:11px;line-height:1;padding:0 2px;flex-shrink:0;opacity:.6}
+.img-btn:hover{color:#7C5CFC;opacity:1}
+.img-btn.has-img{color:#7C5CFC;opacity:1}
 .del{background:none;border:none;color:#2A2A3A;cursor:pointer;font-size:15px;line-height:1;padding:0 2px;flex-shrink:0}
 .del:hover{color:#FF4D6A}
 .cv{cursor:pointer}.cv:hover{color:#7C5CFC}
@@ -135,6 +138,7 @@ textarea:focus,input:focus{border-color:#7C5CFC}
   <div class="sp"></div>
   <span class="cd">До полудня: <b id="cd">—</b></span>
   <button class="btn bg" onclick="openCfg()">⚙ Настройки</button>
+  <button class="btn" id="auto-btn" onclick="toggleAuto()" style="border:1px solid #2A2A3A;font-size:11px;padding:5px 10px">⏰ АВТО</button>
   <button class="btn bg" onclick="openAdd()">+ Аккаунты</button>
   <button class="btn bgr" id="fb" onclick="doFetch()">🔄 Обновить</button>
 </div>
@@ -254,7 +258,7 @@ let accs=[],stats={},thumbs={},
     stMap={},ek=null,
     base=0,cols=15,
     sStates={},sOrder=[],
-    lastAuto='',eaId=null,imgId=null;
+    lastAuto='',eaId=null,imgId=null,autoOn=true;
 
 const dk=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const dl=k=>{const[,m,d]=k.split('-');return d+'.'+m};
@@ -325,7 +329,7 @@ function render(){
   if(nr)nr.textContent=dl(ds[0])+' → '+dl(ds[ds.length-1]);
 
   // HEADER
-  var h='<tr><th class="acc-th">Аккаунт</th><th class="img-th">🎬 РИЛС</th>';
+  var h='<tr><th class="acc-th">Аккаунт</th>';
   for(var di=0;di<ds.length;di++){
     var d=ds[di];
     var isTd=(d===today),isSrt=!!sStates[d],sdir=sStates[d],isPri=(sOrder[0]===d);
@@ -368,7 +372,7 @@ function render(){
       var d2=ds[di2];
       var v=(stats[d2]&&stats[d2].accounts)?stats[d2].accounts[a.id]:undefined;
       var etk=a.id+':'+d2;var tc=d2===today?' tdy':'';
-      var vc2=d2===today?vcls(v,stMap[a.id]):'';
+      var vc2=vcls(v,stMap[a.id]);
       b+='<td class="'+tc+'">';
       if(ek===etk)b+='<input class="ci" id="I-'+etk+'" value="'+(v!=null?v:0)+'">';
       else b+='<span class="cv '+vc2+'" style="'+(v==null?'color:#33334A':'')+'" data-sea="'+a.id+'" data-sed="'+d2+'">'+( v!=null?fmt(v):'—')+'</span>';
@@ -376,8 +380,8 @@ function render(){
     }
     b+='</tr>';
   }
-  if(!sorted.length)b='<tr><td colspan="'+(ds.length+2)+'" style="padding:60px;text-align:center;color:#33334A">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>';
-  b+='<tr class="dv"><td colspan="'+(ds.length+2)+'"></td></tr>';
+  if(!sorted.length)b='<tr><td colspan="'+(ds.length+1)+'" style="padding:60px;text-align:center;color:#33334A">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>';
+  b+='<tr class="dv"><td colspan="'+(ds.length+1)+'"></td></tr>';
 
   // TOTAL VIEWS
   b+='<tr class="trv"><td class="atd l">Всего просмотров</td><td></td>';
@@ -661,7 +665,7 @@ function saveCfg(){
   var k=document.getElementById('CK').value.trim();if(k){apiKey=k;S.s('ig-k',k);}
   omUrl=document.getElementById('CO').value.trim()||omUrl;
   updUrl=document.getElementById('CU').value.trim();
-  S.s('ig-c',{om:omUrl,upd:updUrl});cCfg();lg('⚙ Сохранено','ok');
+  S.s('ig-c',{om:omUrl,upd:updUrl,ao:autoOn});cCfg();lg('⚙ Сохранено','ok');
 }
 function clrStats(){if(!confirm('Удалить всю статистику?'))return;stats={};S.d('ig-s');cCfg();lg('🗑 Статистика очищена','wrn');render();}
 
@@ -745,12 +749,28 @@ function showBanner(html,ver){
 }
 function applyP(){var p=S.g('ig-p');if(!p)return;S.d('ig-p');document.open();document.write(p);document.close();}
 
+
+function toggleAuto(){
+  autoOn=!autoOn;
+  var cfg=S.g('ig-c')||{};cfg.ao=autoOn;S.s('ig-c',cfg);
+  updAutoBtn();
+  lg((autoOn?'⏰ Авто-сбор включён':'⏸ Авто-сбор выключен'),autoOn?'ok':'wrn');
+}
+function updAutoBtn(){
+  var b=document.getElementById('auto-btn');
+  if(!b)return;
+  b.textContent=autoOn?'⏰ АВТО':'⏸ АВТО';
+  b.style.background=autoOn?'#0A2018':'#1A1A26';
+  b.style.color=autoOn?'#0EC99A':'#666688';
+  b.style.borderColor=autoOn?'#0EC99A':'#2A2A3A';
+}
 function showMain(){
   document.getElementById('SU').style.display='none';
   document.getElementById('hdr').style.display='flex';
   document.getElementById('nav').style.display='flex';
   document.getElementById('bdy').style.display='flex';
   document.getElementById('ver').textContent='v'+V;
+  updAutoBtn();
   render();
   if(accs.length)lg('Загружено: '+accs.length+' акков, '+Object.keys(stats).length+' дней','ok');
   else lg('Добавь аккаунты чтобы начать','inf');
@@ -765,7 +785,7 @@ setInterval(function(){
   var el=document.getElementById('cd');
   if(el)el.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
   var today=dk();
-  if(now.getHours()===12&&now.getMinutes()===0&&now.getSeconds()===0&&lastAuto!==today&&!busy){lastAuto=today;doFetch();}
+  if(autoOn&&now.getHours()===12&&now.getMinutes()===0&&now.getSeconds()===0&&lastAuto!==today&&!busy){lastAuto=today;doFetch();}
 },1000);
 setInterval(chkUpd,30*60*1000);
 
@@ -775,7 +795,7 @@ setupEditListeners();
 (function(){
   var k=S.g('ig-k'),a=S.g('ig-a'),st=S.g('ig-s'),c=S.g('ig-c'),th=S.g('ig-th');
   if(a)accs=a;if(st)stats=st;if(th)thumbs=th;
-  if(c){if(c.om)omUrl=c.om;if(c.upd)updUrl=c.upd;}
+  if(c){if(c.om)omUrl=c.om;if(c.upd)updUrl=c.upd;if(c.ao!=null)autoOn=c.ao;}
   if(k){apiKey=k;showMain();}
   else document.getElementById('SU').style.display='flex';
 })();

@@ -129,6 +129,9 @@ textarea:focus,input:focus{border-color:#7C5CFC}
 .pz strong{display:block;font-size:14px;margin-bottom:6px;color:#888}
 .upd{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1A1430;border:1px solid #7C5CFC;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px;z-index:400;animation:su .3s ease}
 @keyframes su{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+.reel-th{background:#0B0B12;border-right:1px solid #1E1E2C;text-align:center;width:32px;min-width:32px;padding:4px 2px;font-size:11px;position:sticky;left:185px;z-index:19}
+.reel-td{text-align:center!important;padding:2px 3px!important;vertical-align:middle!important;width:32px;position:sticky;left:185px;z-index:4;cursor:pointer}
 </style>
 </head>
 <body>
@@ -362,6 +365,8 @@ function render(){
     b+='<button class="anm '+tvc+'" data-eid="'+a.id+'">'+u+'</button>';
     b+='<button class="del" data-did="'+a.id+'">×</button>';
     b+='</div></td>';
+    // reel column - compact icon only
+    b+='<td class="reel-td" style="'+bg2+'" data-iid="'+a.id+'" data-inm="'+u+'">'+(thumbs[a.id]?'<span style="font-size:14px;cursor:pointer" title="Есть превью">🎬</span>':'<span style="font-size:12px;opacity:.25;cursor:pointer">🎬</span>')+'</td>';
     for(var di2=0;di2<ds.length;di2++){
       var d2=ds[di2];
       var v=(stats[d2]&&stats[d2].accounts)?stats[d2].accounts[a.id]:undefined;
@@ -374,8 +379,8 @@ function render(){
     }
     b+='</tr>';
   }
-  if(!sorted.length)b='<tr><td colspan="'+(ds.length+1)+'" style="padding:60px;text-align:center;color:#33334A">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>';
-  b+='<tr class="dv"><td colspan="'+(ds.length+1)+'"></td></tr>';
+  if(!sorted.length)b='<tr><td colspan="'+(ds.length+2)+'" style="padding:60px;text-align:center;color:#33334A">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>';
+  b+='<tr class="dv"><td colspan="'+(ds.length+2)+'"></td></tr>';
 
   // TOTAL VIEWS
   b+='<tr class="trv"><td class="atd l">Всего просмотров</td><td></td>';

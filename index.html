@@ -132,6 +132,18 @@ textarea:focus,input:focus{border-color:#7C5CFC}
 
 .reel-th{background:#0B0B12;border-right:1px solid #1E1E2C;text-align:center;width:32px;min-width:32px;padding:4px 2px;font-size:11px;position:sticky;left:185px;z-index:19}
 .reel-td{text-align:center!important;padding:2px 3px!important;vertical-align:middle!important;width:32px;position:sticky;left:185px;z-index:4;cursor:pointer}
+
+.acc-num{font-size:10px;font-weight:700;color:#33334A;font-family:monospace;min-width:20px;text-align:right;flex-shrink:0;padding-right:4px;align-self:center}
+.acc-cell{display:flex;flex-direction:column;gap:0px;overflow:hidden;flex:1;min-width:0}
+.acc-top{display:flex;align-items:center;gap:2px}
+.acc-note{padding-left:1px;min-height:13px}
+.note-txt{cursor:pointer}
+.note-val{font-size:10px;color:#555570;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;display:inline-block;vertical-align:middle}
+.note-val:hover{color:#8080B0}
+.note-ph{font-size:10px;color:#25253A;font-style:italic}
+.note-ph:hover{color:#444460}
+.note-inp{background:#0F0F1C;border:1px solid #7C5CFC;border-radius:3px;color:#C0C0E0;font-size:10px;font-family:inherit;padding:1px 5px;outline:none;width:130px}
+.row-del td{opacity:.25}
 </style>
 </head>
 <body>
@@ -196,6 +208,7 @@ textarea:focus,input:focus{border-color:#7C5CFC}
       <span class="clb">Email пароль</span><input class="ci2" id="EEP" type="text"><div class="ca"><button class="cb" id="tv-ep">👁</button><button class="cb" id="cp-ep">📋</button></div>
       <span class="clb">Ключ/2FA</span><input class="ci2" id="EK"><div class="ca"><button class="cb" id="cp-k">📋</button></div>
       <span class="clb">ГЕО</span><input class="ci2" id="EG"><div class="ca"><button class="cb" id="cp-g">📋</button></div>
+      <span class="clb">Заметка</span><input class="ci2" id="EN" placeholder="текст заметки..."><div></div>
     </div>
     <div class="cful"><span class="cfult" id="EF">—</span><button class="cfulc" id="cp-all">📋 Копировать всё</button></div>
     <div class="ma">
@@ -261,7 +274,7 @@ let accs=[],stats={},thumbs={},
     stMap={},ek=null,
     base=0,cols=15,
     sStates={},sOrder=[],
-    lastAuto='',eaId=null,imgId=null,autoOn=true;
+    lastAuto='',eaId=null,imgId=null,autoOn=true,numCounter=0,noteKey=null;
 
 const dk=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const dl=k=>{const[,m,d]=k.split('-');return d+'.'+m};
@@ -326,6 +339,41 @@ function getSorted(){
   });
 }
 
+function getSlots(){
+  var active=accs.filter(function(a){return !a.deleted;});
+  var hasDeleted=accs.some(function(a){return a.deleted;});
+  if(sO.length){
+    active=active.slice().sort(function(a,b){
+      for(var i=0;i<sO.length;i++){
+        var day=sO[i],dir=sS[day];if(!dir)continue;
+        var sa=stats[day];
+        var va=(sa&&sa.accounts&&sa.accounts[a.id]!=null)?sa.accounts[a.id]:-1;
+        var vb=(sa&&sa.accounts&&sa.accounts[b.id]!=null)?sa.accounts[b.id]:-1;
+        if(va!==vb)return dir==='desc'?vb-va:va-vb;
+      }return 0;
+    });
+  }
+  if(!hasDeleted)return active;
+  var byNum=accs.slice().sort(function(a,b){return (a.num||0)-(b.num||0);});
+  var result=[],_aIdx=0;
+  for(var _si=0;_si<byNum.length;_si++){
+    if(byNum[_si].deleted)result.push(byNum[_si]);
+    else result.push(active[_aIdx++]);
+  }
+  return result;
+}
+
+function openNote(id){
+  noteKey=id;render();
+  setTimeout(function(){var el=document.getElementById('NI-'+id);if(el){el.focus();el.select();}},20);
+}
+function saveNote(id){
+  var inp=document.getElementById('NI-'+id);if(!inp)return;
+  var _na=accs.findIndex(function(a){return a.id===id;});
+  if(_na>=0)accs[_na].note=inp.value.trim();
+  noteKey=null;S.s('ig-a',accs);render();
+}
+
 function render(){
   var ds=days(),today=dk();
   var nr=document.getElementById('nr');
@@ -353,17 +401,31 @@ function render(){
   };
 
   // BODY
-  var b='',sorted=getSorted();
+  var b='',sorted=getSlots();
   for(var i=0;i<sorted.length;i++){
-    var a=sorted[i],u=gu(a.credentials),st=stMap[a.id]||'',cls=i%2?'re':'ro';
+    var a=sorted[i];
+    var cls=i%2?'re':'ro';
     var bg2=i%2?'background:#111118':'background:#09090F';
+    var numB='<span class="acc-num">'+(a.num||i+1)+'</span>';
+    if(a.deleted){
+      b+='<tr class="'+cls+' row-del"><td class="atd" style="'+bg2+'">'+numB+'</td>';
+      b+='<td class="reel-td" style="'+bg2+'"></td>';
+      for(var _dd=0;_dd<ds.length;_dd++)b+='<td></td>';
+      b+='</tr>';
+      continue;
+    }
+    var u=gu(a.credentials),st=stMap[a.id]||'';
     var tvc=vcls(stats[today]&&stats[today].accounts?stats[today].accounts[a.id]:null,stMap[a.id]);
-    var stH=st?('<span class="st">'+st+'</span>'):'<span class="dot"></span>';
+    var stH=st?('<span class="sticon">'+st+'</span>'):'<span class="dot"></span>';
+    var noteHtml=noteKey===a.id
+      ?('<input class="note-inp" id="NI-'+a.id+'" value="'+(a.note||'').replace(/"/g,'&quot;')+'" placeholder="заметка..." maxlength="80">')
+      :('<span class="note-txt" data-nid="'+a.id+'">'+(a.note?('<span class="note-val">'+a.note+'</span>'):'<span class="note-ph">+ заметка</span>')+'</span>');
     b+='<tr class="'+cls+'">';
     b+='<td class="atd" style="'+bg2+'">';
+    b+=numB;
     b+='<div class="arow">'+stH+'<span style="font-family:monospace;font-size:10px;color:#44445A">@</span>';
-    b+='<button class="anm '+tvc+'" data-eid="'+a.id+'">'+u+'</button>';
-    b+='<button class="del" data-did="'+a.id+'">×</button>';
+    b+='<div class="acc-cell"><div class="acc-top"><button class="anm '+tvc+'" data-eid="'+a.id+'">'+u+'</button><button class="del" data-did="'+a.id+'">×</button></div>';
+    b+='<div class="acc-note">'+noteHtml+'</div></div>';
     b+='</div></td>';
     // reel column - compact icon only
     b+='<td class="reel-td" style="'+bg2+'" data-iid="'+a.id+'" data-inm="'+u+'">'+(thumbs[a.id]?'<span style="font-size:14px;cursor:pointer" title="Есть превью">🎬</span>':'<span style="font-size:12px;opacity:.25;cursor:pointer">🎬</span>')+'</td>';
@@ -379,7 +441,7 @@ function render(){
     }
     b+='</tr>';
   }
-  if(!sorted.length)b='<tr><td colspan="'+(ds.length+2)+'" style="padding:60px;text-align:center;color:#33334A">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>';
+  if(!accs.length)b='<tr><td colspan="'+(ds.length+2)+'" style="padding:60px;text-align:center;color:#33334A">Нет аккаунтов — нажми «+ Аккаунты»</td></tr>';
   b+='<tr class="dv"><td colspan="'+(ds.length+2)+'"></td></tr>';
 
   // TOTAL VIEWS
@@ -447,9 +509,15 @@ function render(){
     tb_._bound=true;
     tb_.addEventListener('blur',function(e){
       if(e.target.tagName==='INPUT'&&e.target.classList.contains('ci'))commitEdit();
+      if(e.target.classList.contains('note-inp')){var _nid=e.target.id.slice(3);saveNote(_nid);}
     },true);
     tb_.addEventListener('keydown',function(e){
       if(e.target.tagName!=='INPUT')return;
+      if(e.target.classList.contains('note-inp')){
+        if(e.key==='Enter'){var _nid2=e.target.id.slice(3);saveNote(_nid2);}
+        if(e.key==='Escape'){noteKey=null;render();}
+        e.stopPropagation();return;
+      }
       if(e.key==='Enter')commitEdit();
       if(e.key==='Escape'){ek=null;render();}
     },true);
@@ -458,6 +526,7 @@ function render(){
     var t=e.target,el;
     if((el=t.closest('[data-eid]'))){oEdit(el.dataset.eid);return;}
     if((el=t.closest('[data-did]'))){delAcc(el.dataset.did);return;}
+    if((el=t.closest('[data-nid]'))){openNote(el.dataset.nid);return;}
     if((el=t.closest('[data-iid]'))){oImg(el.dataset.iid,el.dataset.inm);return;}
     if((el=t.closest('[data-sea]'))){se(el.dataset.sea,el.dataset.sed);return;}
     if((el=t.closest('[data-stf]'))){seT(el.dataset.stf,el.dataset.std);return;}
@@ -606,12 +675,12 @@ function cAdd(){document.getElementById('AM').style.display='none';}
 document.getElementById('AT').addEventListener('input',function(){document.getElementById('AC').textContent=this.value.split('\n').filter(function(l){return l.trim();}).length+' строк';});
 function addAccs(){
   var txt=document.getElementById('AT').value,geo=document.getElementById('AG').value||'GEO';
-  txt.split('\n').forEach(function(l){l=l.trim();if(l)accs.push({id:uid(),credentials:l,geo:geo});});
-  S.s('ig-a',accs);lg('➕ Добавлено: '+accs.length+' всего','ok');
+  txt.split('\n').forEach(function(l){l=l.trim();if(l)accs.push({id:uid(),credentials:l,geo:geo,num:++numCounter,note:'',deleted:false});});
+  S.s('ig-a',accs);lg('➕ Добавлено: '+accs.length+' всего','ok');  S.s('ig-n',numCounter);
   cAdd();document.getElementById('AT').value='';document.getElementById('AC').textContent='0 строк';render();
 }
 function delAcc(id){
-  accs=accs.filter(function(a){return a.id!==id;});delete stMap[id];
+  var _ai=accs.findIndex(function(a){return a.id===id;});if(_ai>=0)accs[_ai].deleted=true;
   S.s('ig-a',accs);lg('🗑 Удалён','inf');render();
 }
 
@@ -640,6 +709,7 @@ function oEdit(id){
   document.getElementById('EEP').value=p[3]||'';document.getElementById('EEP').type='text';
   document.getElementById('EK').value=p[4]||'';
   document.getElementById('EG').value=a.geo||'';
+  var _en=document.getElementById('EN');if(_en)_en.value=a.note||'';
   updCred();document.getElementById('EM').style.display='flex';document.getElementById('EL').focus();
 }
 function cEdit(){document.getElementById('EM').style.display='none';eaId=null;}
@@ -648,13 +718,13 @@ function saveEdit(){
   var creds=[login,document.getElementById('EP').value,document.getElementById('EE').value,document.getElementById('EEP').value,document.getElementById('EK').value].join(':');
   var geo=document.getElementById('EG').value||'GEO';
   var idx=accs.findIndex(function(a){return a.id===eaId;});
-  if(idx>=0){accs[idx].credentials=creds;accs[idx].geo=geo;}
+  var _note=document.getElementById('EN');if(idx>=0){accs[idx].credentials=creds;accs[idx].geo=geo;if(_note)accs[idx].note=_note.value.trim();}
   S.s('ig-a',accs);lg('✏ @'+login+' обновлён','ok');cEdit();render();
 }
 function delFromEdit(){
   var a=accs.find(function(x){return x.id===eaId;});
   if(!confirm('Удалить @'+gu((a||{credentials:''}).credentials)+'?'))return;
-  accs=accs.filter(function(x){return x.id!==eaId;});delete stMap[eaId];
+  var _di2=accs.findIndex(function(x){return x.id===eaId;});if(_di2>=0)accs[_di2].deleted=true;delete stMap[eaId];
   S.s('ig-a',accs);lg('🗑 Удалён','inf');cEdit();render();
 }
 
@@ -803,6 +873,8 @@ setupEditListeners();
   var k=S.g('ig-k'),a=S.g('ig-a'),st=S.g('ig-s'),c=S.g('ig-c'),th=S.g('ig-th');
   if(a)accs=a;if(st)stats=st;if(th)thumbs=th;
   if(c){if(c.om)omUrl=c.om;if(c.upd)updUrl=c.upd;if(c.ao!=null)autoOn=c.ao;}
+  var _nc=S.g('ig-n');if(_nc)numCounter=_nc;
+  if(a)a.forEach(function(x){if((x.num||0)>numCounter)numCounter=x.num;});
   if(k){apiKey=k;showMain();}
   else document.getElementById('SU').style.display='flex';
 })();

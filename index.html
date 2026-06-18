@@ -803,7 +803,7 @@ document.addEventListener('paste',function(e){
 
 // SETUP
 function vsk(){document.getElementById('SB').disabled=!document.getElementById('SK').value.trim().startsWith('sk-ant-');}
-function doSetup(){var k=document.getElementById('SK').value.trim();if(!k)return;apiKey=k;S.s('ig-k',k);showMain();}
+function doSetup(){var k=document.getElementById('SK').value.trim();if(!k)return;apiKey=k;S.s('ig-k',k);wsSet('ig-k',k);showMain();}
 function tpw(id,btn){var i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁':'🙈';}
 
 // AUTO-UPDATE

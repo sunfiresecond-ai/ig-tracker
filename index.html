@@ -133,14 +133,14 @@ textarea:focus,input:focus{border-color:#7C5CFC}
 .reel-th{background:#0B0B12;border-right:1px solid #1E1E2C;text-align:center;width:32px;min-width:32px;padding:4px 2px;font-size:11px;position:sticky;left:185px;z-index:19}
 .reel-td{text-align:center!important;padding:2px 3px!important;vertical-align:middle!important;width:32px;position:sticky;left:185px;z-index:4;cursor:pointer}
 
-.acc-num{font-size:10px;font-weight:700;color:#33334A;font-family:monospace;min-width:20px;text-align:right;flex-shrink:0;padding-right:4px;align-self:center}
+.acc-num{font-size:11px;font-weight:800;color:#5A5A8A;font-family:monospace;min-width:20px;text-align:right;flex-shrink:0;padding-right:4px;align-self:center;letter-spacing:.02em}
 .acc-cell{display:flex;flex-direction:column;gap:0px;overflow:hidden;flex:1;min-width:0}
 .acc-top{display:flex;align-items:center;gap:2px}
 .acc-note{padding-left:1px;min-height:13px}
 .note-txt{cursor:pointer}
-.note-val{font-size:10px;color:#555570;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;display:inline-block;vertical-align:middle}
-.note-val:hover{color:#8080B0}
-.note-ph{font-size:10px;color:#25253A;font-style:italic}
+.note-val{font-size:10px;color:#6A7AB5;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;display:inline-block;vertical-align:middle}
+.note-val:hover{color:#9090CC}
+.note-ph{font-size:10px;color:#353560;font-style:italic}
 .note-ph:hover{color:#444460}
 .note-inp{background:#0F0F1C;border:1px solid #7C5CFC;border-radius:3px;color:#C0C0E0;font-size:10px;font-family:inherit;padding:1px 5px;outline:none;width:130px}
 .row-del td{opacity:.25}
@@ -582,7 +582,7 @@ async function callAI(msg){
 async function fetchIG(users,targetDate){
   var list=users.map(function(u){return '@'+u;}).join(', ');
   try{
-    var raw=await callAI('For each Instagram user: '+list+' — search their reels page (instagram.com/USERNAME/reels/) and find reels uploaded on '+targetDate+'. Sum view counts per user. If none on that date, views=0. Return ONLY JSON: {"username":{"views":<int>,"reels_count":<int>,"found":<bool>},...}');
+    var raw=await callAI('For each Instagram account: '+list+' — go to instagram.com/USERNAME/reels/ and get the view counts of the last 6 reels (most recent). Sum all 6 view counts per user. Return ONLY JSON: {"username":{"views":<total_sum_of_last_6_reels_views>,"reels_count":6,"found":<bool>},...}');
     var parsed=JSON.parse(raw.replace(/```\w*\n?|```/g,'').trim());
     var res={};
     users.forEach(function(u){var d=parsed[u]||{};res[u]={views:parseInt(d.views)||0,reels_count:parseInt(d.reels_count)||0,found:!!d.found};});
@@ -604,19 +604,19 @@ async function doFetch(){
   var btn=document.getElementById('fb');btn.disabled=true;btn.textContent='⏳ Сбор...';
   var yest=new Date();yest.setDate(yest.getDate()-1);
   var tgt=dk(yest);
-  lg('🔄 Сбор за '+dl(tgt)+'...','inf');
+  lg('🔄 Сбор последних 6 рилсов...','inf');
   if(!stats[tgt])stats[tgt]={accounts:{},totalClicks:0,totalFans:0};
   if(!stats[tgt].accounts)stats[tgt].accounts={};
   accs.forEach(function(a){stMap[a.id]='⏳';});render();
   try{
     var users=accs.map(function(a){return gu(a.credentials);});
-    lg('📸 '+users.length+' аккаунтов...','inf');
+    lg('📸 Последние 6 рилсов × '+users.length+' акков...','inf');
     var res=await fetchIG(users,tgt);
     accs.forEach(function(a){
       var u=gu(a.credentials),r=res[u]||{views:0,reels_count:0,found:false};
       stats[tgt].accounts[a.id]=r.views;
       stMap[a.id]=r.found?'✅':'⚠️';
-      lg((r.found?'✓':'⚠')+' @'+u+': '+r.reels_count+' рилс → '+fmt(r.views),r.found?'ok':'wrn');
+      lg((r.found?'✓':'⚠')+' @'+u+': '+fmt(r.views)+' views (6 рилсов)',r.found?'ok':'wrn');
     });
   }catch(e){
     accs.forEach(function(a){stats[tgt].accounts[a.id]=0;stMap[a.id]='❌';});

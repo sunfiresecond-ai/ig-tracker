@@ -342,10 +342,10 @@ function getSorted(){
 function getSlots(){
   var active=accs.filter(function(a){return !a.deleted;});
   var hasDeleted=accs.some(function(a){return a.deleted;});
-  if(sO.length){
+  if(sOrder.length){
     active=active.slice().sort(function(a,b){
-      for(var i=0;i<sO.length;i++){
-        var day=sO[i],dir=sS[day];if(!dir)continue;
+      for(var i=0;i<sOrder.length;i++){
+        var day=sO[i],dir=sStates[day];if(!dir)continue;
         var sa=stats[day];
         var va=(sa&&sa.accounts&&sa.accounts[a.id]!=null)?sa.accounts[a.id]:-1;
         var vb=(sa&&sa.accounts&&sa.accounts[b.id]!=null)?sa.accounts[b.id]:-1;
